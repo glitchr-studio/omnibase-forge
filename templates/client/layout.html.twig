@@ -10,7 +10,7 @@
 <div class="forge{{ block('forge_class') is defined ? ' ' ~ block('forge_class') }}">
     <header class="forge-header content-header">
         <div>
-            <h1 class="title" data-glitch="{{ block('forge_title')|striptags|trim }}">{{ block('forge_title') }}</h1>
+            <h1 class="title">{{ block('forge_title') }}</h1>
             {% if block('forge_lead') is defined %}<p class="lead">{{ block('forge_lead') }}</p>{% endif %}
         </div>
         {% if block('forge_actions') is defined %}<div class="content-header-actions">{{ block('forge_actions') }}</div>{% endif %}

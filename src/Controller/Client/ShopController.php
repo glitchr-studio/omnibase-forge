@@ -7,6 +7,7 @@ use Base\Forge\Entity\Product\HourPack;
 use Base\Forge\Entity\Quote;
 use Base\Forge\Enum\QuoteStatus;
 use Base\Forge\Form\QuoteRequestType;
+use Base\Forge\Model\QuoteRequest;
 use Base\Forge\Repository\QuoteRepository;
 use Base\Forge\Service\HourLedger;
 use Base\Forge\Service\QuoteStatusGuard;
@@ -65,18 +66,23 @@ class ShopController extends AbstractController
         MailerInterface $mailer,
         #[Autowire('%forge.contact_email%')] ?string $contact = null,
     ): Response {
-        $quote = new Quote($this->quotes->nextReference());
+        $data = new QuoteRequest();
         $user = $this->getUser();
         if ($user instanceof User) {
-            $quote->setClient($user);
-            $quote->setEmail((string) $user->getEmail());
-            $quote->setContactName((string) $user);
+            $data->email = (string) $user->getEmail();
+            $data->contactName = (string) $user;
         }
 
-        $form = $this->createForm(QuoteRequestType::class, $quote);
+        $form = $this->createForm(QuoteRequestType::class, $data);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            $quote = new Quote($this->quotes->nextReference());
+            $quote->setClient($user instanceof User ? $user : null);
+            $quote->setContactName($data->contactName);
+            $quote->setEmail($data->email);
+            $quote->setTitle($data->title);
+            $quote->setRequest($data->request);
             $quote->setStatus(QuoteStatus::REQUESTED);
             $this->entityManager->persist($quote);
             $this->entityManager->flush();

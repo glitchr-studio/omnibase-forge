@@ -2,14 +2,13 @@
 
 namespace Base\Forge\Form;
 
-use Base\Forge\Entity\Quote;
+use Base\Forge\Model\QuoteRequest;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\EmailType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
-use Symfony\Component\Validator\Constraints as Assert;
 
 /** What a visitor fills in to ask for a quote: who, what, in their words. */
 class QuoteRequestType extends AbstractType
@@ -24,14 +23,13 @@ class QuoteRequestType extends AbstractType
                 'label' => 'quote.form.request',
                 'help' => 'quote.form.request_help',
                 'attr' => ['rows' => 7],
-                'constraints' => [new Assert\NotBlank(), new Assert\Length(min: 30, max: 6000)],
             ]);
     }
 
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
-            'data_class' => Quote::class,
+            'data_class' => QuoteRequest::class,
             'translation_domain' => 'forge',
         ]);
     }
