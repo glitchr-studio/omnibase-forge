@@ -2,18 +2,17 @@
 
 namespace Tests\Base\Forge\Entity;
 
-use Base\Entity\User;
 use Base\Forge\Entity\Card;
 use Base\Forge\Entity\Project;
 use Base\Forge\Entity\TimeEntry;
 use Base\Forge\Enum\CardColumn;
-use PHPUnit\Framework\TestCase;
+use Tests\Base\Forge\ForgeKernelTestCase;
 
-class ProjectTest extends TestCase
+class ProjectTest extends ForgeKernelTestCase
 {
     public function testTheBoardListsEveryColumnInOrder(): void
     {
-        $project = new Project($this->createStub(User::class), 'Site');
+        $project = new Project($this->user(), 'Site');
         $project->addCard(new Card('Logo', CardColumn::DONE));
         $project->addCard(new Card('Menu', CardColumn::BACKLOG));
 
@@ -25,7 +24,7 @@ class ProjectTest extends TestCase
 
     public function testProgressIsTheShareOfDoneCardsElseOfTheBudget(): void
     {
-        $project = new Project($this->createStub(User::class), 'Site');
+        $project = new Project($this->user(), 'Site');
         $project->setBudgetMinutes(600);
         $project->addTimeEntry(new TimeEntry(150, 'Work'));
         self::assertSame(25, $project->getProgress(), 'no cards: the budget spent');

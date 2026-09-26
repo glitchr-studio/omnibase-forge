@@ -21,6 +21,7 @@ use Symfony\Component\HttpFoundation\HeaderUtils;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 
 /**
@@ -95,10 +96,13 @@ class DownloadController extends AbstractController
     }
 
     #[Route('/telechargements/fichier/{id}/{filename}', name: 'forge_download_file', requirements: ['id' => '\d+', 'filename' => '[^/]+'])]
-    public function file(Request $request, int $id): Response
+    public function serve(Request $request, int $id): Response
     {
+        // A plain 403, not the security layer's AccessDeniedException: that
+        // one sends a visitor to the login page, and a link that is expired
+        // or forged is not solved by signing in (nor is Composer's request).
         if (!$this->links->verify($request)) {
-            throw $this->createAccessDeniedException('This download link is invalid or has expired.');
+            throw new AccessDeniedHttpException('This download link is invalid or has expired.');
         }
 
         $artifact = $this->entityManager->getRepository(Artifact::class)->find($id)

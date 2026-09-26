@@ -13,7 +13,7 @@ use Doctrine\ORM\Mapping as ORM;
  */
 #[ORM\Entity]
 #[ORM\Table(name: 'forge_release')]
-#[ORM\UniqueConstraint(name: 'forge_release_version', columns: ['software_id', 'version'])]
+#[ORM\UniqueConstraint(name: 'forge_release_version', fields: ['software', 'version'])]
 class Release implements \Stringable
 {
     #[ORM\Id, ORM\GeneratedValue, ORM\Column]

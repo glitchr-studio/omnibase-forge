@@ -2,7 +2,6 @@
 
 namespace Tests\Base\Forge\Service;
 
-use Base\Entity\User;
 use Base\Forge\Entity\HourCredit;
 use Base\Forge\Entity\Project;
 use Base\Forge\Entity\TimeEntry;
@@ -10,9 +9,9 @@ use Base\Forge\Enum\CreditReason;
 use Base\Forge\Repository\HourCreditRepository;
 use Base\Forge\Service\HourLedger;
 use Doctrine\ORM\EntityManagerInterface;
-use PHPUnit\Framework\TestCase;
+use Tests\Base\Forge\ForgeKernelTestCase;
 
-class HourLedgerTest extends TestCase
+class HourLedgerTest extends ForgeKernelTestCase
 {
     private function ledger(): HourLedger
     {
@@ -21,7 +20,7 @@ class HourLedgerTest extends TestCase
 
     public function testLoggedTimeIsDebitedFromTheClient(): void
     {
-        $client = $this->createStub(User::class);
+        $client = $this->user();
         $entry = new TimeEntry(90, 'Fix checkout');
         (new Project($client, 'Shop'))->addTimeEntry($entry);
 
@@ -36,7 +35,7 @@ class HourLedgerTest extends TestCase
     public function testAnEditedEntryUpdatesItsLineInPlace(): void
     {
         $entry = new TimeEntry(30, 'Call');
-        (new Project($this->createStub(User::class), 'Shop'))->addTimeEntry($entry);
+        (new Project($this->user(), 'Shop'))->addTimeEntry($entry);
         $existing = $this->ledger()->debitFor($entry, null);
 
         $entry->setMinutes(45);
@@ -47,7 +46,7 @@ class HourLedgerTest extends TestCase
     public function testNonBillableTimeCostsNothing(): void
     {
         $entry = (new TimeEntry(120, 'Internal refactoring'))->setBillable(false);
-        (new Project($this->createStub(User::class), 'Shop'))->addTimeEntry($entry);
+        (new Project($this->user(), 'Shop'))->addTimeEntry($entry);
 
         self::assertNull($this->ledger()->debitFor($entry, null));
         self::assertNull($this->ledger()->debitFor(new TimeEntry(60, 'No project yet'), null));

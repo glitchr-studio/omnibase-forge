@@ -28,15 +28,15 @@ class ProjectCrudController extends AbstractCrudController
     public function configureFields(string $pageName): iterable
     {
         yield IdField::new('id')->onlyOnIndex();
-        yield TextField::new('name')->setColumns(6);
+        yield TextField::new('title')->setColumns(6);
         yield AssociationField::new('client')->setColumns(6);
-        yield TextField::new('summary')->setColumns(12)->hideOnIndex();
+        yield TextField::new('excerpt', 'Summary')->setColumns(12)->hideOnIndex();
         yield TextField::new('status')->setColumns(3)
             ->setFormType(EnumType::class)->setFormTypeOptions(['class' => ProjectStatus::class])
             ->formatValue(fn ($value) => $value instanceof ProjectStatus ? $value->value : $value);
         yield IntegerField::new('budgetMinutes', 'Budget (minutes)')->setColumns(3);
         yield DateField::new('dueOn')->setColumns(3);
-        yield TextField::new('repository')->setColumns(4)->setHelp('git-bundle repository name');
+        yield TextField::new('gitRepository', 'Git repository')->setColumns(4)->setHelp('git-bundle repository name');
         yield TextField::new('repositoryUrl')->setColumns(8)->hideOnIndex()->setHelp('Cloned by git:sync when not in git.repositories');
     }
 }

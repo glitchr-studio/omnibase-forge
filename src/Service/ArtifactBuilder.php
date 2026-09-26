@@ -26,7 +26,7 @@ class ArtifactBuilder
     public function build(Release $release): Artifact
     {
         $software = $release->getSoftware() ?? throw new \LogicException('A release without software has nothing to build.');
-        $repository = $software->getRepository() ?? throw new \LogicException(sprintf('%s has no git repository to build from.', $software));
+        $repository = $software->getGitRepository() ?? throw new \LogicException(sprintf('%s has no git repository to build from.', $software));
         $ref = $release->getTag() ?? $release->getCommitSha() ?? throw new \LogicException(sprintf('%s has neither tag nor commit.', $release));
 
         $folder = sprintf('%s-%s', $software->getSlug(), $release->getVersion());

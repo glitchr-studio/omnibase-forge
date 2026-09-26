@@ -28,12 +28,12 @@ class ProjectRepository extends ServiceEntityRepository
     public function findWithRepository(): array
     {
         return $this->createQueryBuilder('p')
-            ->andWhere('p.repository IS NOT NULL')
+            ->andWhere('p.gitRepository IS NOT NULL')
             ->getQuery()->getResult();
     }
 
     public function findOneByRepository(string $repository): ?Project
     {
-        return $this->findOneBy(['repository' => $repository]);
+        return $this->findOneBy(['gitRepository' => $repository]);
     }
 }

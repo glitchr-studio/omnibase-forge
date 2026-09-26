@@ -27,7 +27,7 @@ class ReleaseSync
     /** @return list<Release> the releases created, flushed */
     public function sync(Software $software, bool $build = true): array
     {
-        $repository = $software->getRepository();
+        $repository = $software->getGitRepository();
         if (!$repository || !$this->git->hasRepository($repository)) {
             return [];
         }

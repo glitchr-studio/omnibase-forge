@@ -12,7 +12,7 @@ use Git\Service\Git2Service;
 use Psr\Log\LoggerInterface;
 
 /**
- * The studio's own Packagist: a Composer repository (packages.json) of the
+ * The studio's own Packagist: the index (packages.json) of a Composer repository of the
  * PHP packages among the software. Free ones are listed for anyone; licensed
  * ones for the holder of a valid licence, each version its licence covers,
  * with a dist URL signed for that licence.
@@ -24,7 +24,7 @@ use Psr\Log\LoggerInterface;
  * Each version's metadata is its own composer.json at that tag, read through
  * git/git-bundle, with name, version, dist and source set here.
  */
-class ComposerRepository
+class ComposerIndex
 {
     public function __construct(
         private readonly SoftwareRepository $software,
@@ -105,7 +105,7 @@ class ComposerRepository
     {
         $manifest = [];
         try {
-            $blob = $this->git->getBlob((string) $software->getRepository(), (string) ($release->getTag() ?? $release->getCommitSha()), 'composer.json');
+            $blob = $this->git->getBlob((string) $software->getGitRepository(), (string) ($release->getTag() ?? $release->getCommitSha()), 'composer.json');
             $manifest = json_decode($blob['content'], true, 512, JSON_THROW_ON_ERROR);
         } catch (\Throwable $e) {
             $this->logger?->warning('No composer.json for {software} {version}: {error}', ['software' => $software->getName(), 'version' => $release->getVersion(), 'error' => $e->getMessage()]);

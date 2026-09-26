@@ -50,7 +50,7 @@ class ReleaseSyncCommand extends Command
                 continue;
             }
 
-            $repository = (string) $software->getRepository();
+            $repository = (string) $software->getGitRepository();
             if (!$input->getOption('no-fetch') && ($config = $this->registry->get($repository))) {
                 $this->warmer->sync($repository, $config);
             }
@@ -59,6 +59,9 @@ class ReleaseSyncCommand extends Command
                 $releases = $this->sync->sync($software, !$input->getOption('no-build'));
             } catch (\Throwable $e) {
                 $io->error(sprintf('%s: %s', $software->getName(), $e->getMessage()));
+                if ($output->isVeryVerbose()) {
+                    $io->writeln($e->getTraceAsString());
+                }
                 $failed = true;
                 continue;
             }

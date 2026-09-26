@@ -2,21 +2,20 @@
 
 namespace Tests\Base\Forge\Entity;
 
-use Base\Entity\User;
 use Base\Forge\Entity\License;
 use Base\Forge\Entity\Release;
 use Base\Forge\Entity\Software;
 use Base\Forge\Enum\LicenseStatus;
 use Base\Forge\Enum\Pricing;
-use PHPUnit\Framework\TestCase;
+use Tests\Base\Forge\ForgeKernelTestCase;
 
-class LicenseTest extends TestCase
+class LicenseTest extends ForgeKernelTestCase
 {
     private function license(): License
     {
-        $software = (new Software('Forge', 'forge'))->setPricing(Pricing::LICENSED);
+        $software = (new Software(null, 'Forge', 'forge'))->setPricing(Pricing::LICENSED);
 
-        return new License($software, $this->createStub(User::class));
+        return new License($software, $this->user());
     }
 
     public function testOnlyTheHashOfTheKeyIsKept(): void
@@ -50,7 +49,7 @@ class LicenseTest extends TestCase
         $software = $license->getSoftware();
         $old = (new Release($software, '1.0.0'))->setPublishedAt(new \DateTimeImmutable('2025-01-01'));
         $new = (new Release($software, '2.0.0'))->setPublishedAt(new \DateTimeImmutable('2026-06-01'));
-        $other = (new Release(new Software('Other', 'other'), '1.0.0'))->setPublishedAt(new \DateTimeImmutable('2025-01-01'));
+        $other = (new Release(new Software(null, 'Other', 'other'), '1.0.0'))->setPublishedAt(new \DateTimeImmutable('2025-01-01'));
 
         self::assertTrue($license->covers($old));
         self::assertTrue($license->covers($new));

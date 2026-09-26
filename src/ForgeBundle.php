@@ -4,6 +4,7 @@ namespace Base\Forge;
 
 use Base\Bundle\AbstractBaseBundle;
 use Base\Traits\SingletonTrait;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
 
 /**
  * The studio's forge on top of base-bundle-market: software and its releases
@@ -32,5 +33,18 @@ class ForgeBundle extends AbstractBaseBundle
     public function getPath(): string
     {
         return \dirname(__DIR__);
+    }
+
+    public function build(ContainerBuilder $container): void
+    {
+        parent::build($container);
+
+        // base-bundle's App\-wins convention, as base-bundle-market's: every
+        // Base\Forge\Entity\* is aliased onto App\Entity\Forge\* unless the
+        // application declares a real class there - which is how an app
+        // extends a forge entity (its own Software fields, say) without
+        // touching the bundle.
+        $this->setMapping($this->getPath().'/src/Entity', 'Base\Forge\Entity', 'App\Entity\Forge');
+        $this->setMapping($this->getPath().'/src/Repository', 'Base\Forge\Repository', 'App\Repository\Forge');
     }
 }

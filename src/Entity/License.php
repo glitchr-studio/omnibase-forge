@@ -16,7 +16,6 @@ use Doctrine\ORM\Mapping as ORM;
  */
 #[ORM\Entity(repositoryClass: LicenseRepository::class)]
 #[ORM\Table(name: 'forge_license')]
-#[ORM\Index(name: 'forge_license_owner', columns: ['owner_id', 'status'])]
 class License implements \Stringable
 {
     #[ORM\Id, ORM\GeneratedValue, ORM\Column]

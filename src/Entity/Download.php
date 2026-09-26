@@ -8,7 +8,7 @@ use Doctrine\ORM\Mapping as ORM;
 /** One artifact handed out: who, under which licence, when. The IP is kept hashed. */
 #[ORM\Entity]
 #[ORM\Table(name: 'forge_download')]
-#[ORM\Index(name: 'forge_download_at', columns: ['downloaded_at'])]
+#[ORM\Index(name: 'forge_download_at', fields: ['downloadedAt'])]
 class Download
 {
     #[ORM\Id, ORM\GeneratedValue, ORM\Column]

@@ -22,6 +22,18 @@ class HourPack extends Product
     #[ORM\Column(nullable: true)]
     protected ?bool $listed = true;
 
+    /** Time, not goods: checkout asks for no address. */
+    public function isShippable(): bool
+    {
+        return false;
+    }
+
+    /** A quote's own pack is bought once; listed packs, as many as wanted. */
+    public function getMaxQuantity(): ?int
+    {
+        return $this->isListed() ? null : 1;
+    }
+
     public function getMinutes(): int { return (int) $this->minutes; }
     public function setMinutes(int $minutes): self { $this->minutes = max(0, $minutes); return $this; }
 

@@ -14,8 +14,6 @@ use Doctrine\ORM\Mapping as ORM;
  */
 #[ORM\Entity(repositoryClass: HourCreditRepository::class)]
 #[ORM\Table(name: 'forge_hour_credit')]
-#[ORM\Index(name: 'forge_hour_credit_user', columns: ['user_id'])]
-#[ORM\UniqueConstraint(name: 'forge_hour_credit_entry', columns: ['time_entry_id'])]
 class HourCredit
 {
     #[ORM\Id, ORM\GeneratedValue, ORM\Column]

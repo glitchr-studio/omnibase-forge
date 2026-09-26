@@ -2,7 +2,7 @@
 
 namespace Base\Forge\Controller\Client;
 
-use Base\Forge\Service\ComposerRepository;
+use Base\Forge\Service\ComposerIndex;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -18,7 +18,7 @@ use Symfony\Component\Routing\Attribute\Route;
  */
 class ComposerController extends AbstractController
 {
-    public function __construct(private readonly ComposerRepository $repository)
+    public function __construct(private readonly ComposerIndex $index)
     {
     }
 
@@ -30,7 +30,7 @@ class ComposerController extends AbstractController
         $licenses = [];
 
         if (null !== $email || null !== $key) {
-            [$owner, $licenses] = $this->repository->authenticate($email, $key);
+            [$owner, $licenses] = $this->index->authenticate($email, $key);
             if (!$owner) {
                 return new JsonResponse(['error' => 'Invalid e-mail or licence key.'], Response::HTTP_UNAUTHORIZED, [
                     'WWW-Authenticate' => 'Basic realm="Glitchr packages"',
@@ -38,7 +38,7 @@ class ComposerController extends AbstractController
             }
         }
 
-        $response = new JsonResponse($this->repository->packages($licenses));
+        $response = new JsonResponse($this->index->packages($licenses));
         $response->headers->set('Cache-Control', 'private, no-store');
         $response->setEncodingOptions(JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 

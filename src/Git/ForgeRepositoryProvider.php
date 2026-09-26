@@ -27,11 +27,19 @@ final class ForgeRepositoryProvider implements RepositoryProviderInterface
     {
         $repositories = [];
 
+        // A project may work on the repository of a piece of software (or two
+        // projects share one): the first to name it gives the label, and the
+        // url is whichever of them knows it.
+        $add = function (string $name, ?string $url, string $label, ?string $description) use (&$repositories): void {
+            $repositories[$name] ??= $this->entry($name, $url, $label, $description);
+            $repositories[$name]['url'] ??= $url;
+        };
+
         foreach ($this->software->findWithRepository() as $software) {
-            $repositories[$software->getRepository()] = $this->entry($software->getRepository(), $software->getRepositoryUrl(), $software->getName(), $software->getTagline());
+            $add($software->getGitRepository(), $software->getRepositoryUrl(), $software->getName(), $software->getTagline());
         }
         foreach ($this->projects->findWithRepository() as $project) {
-            $repositories[$project->getRepository()] = $this->entry($project->getRepository(), $project->getRepositoryUrl(), $project->getName(), $project->getSummary());
+            $add($project->getGitRepository(), $project->getRepositoryUrl(), $project->getName(), $project->getSummary());
         }
 
         return $repositories;

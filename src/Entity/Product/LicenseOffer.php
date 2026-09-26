@@ -30,6 +30,12 @@ class LicenseOffer extends Product
     #[ORM\Column(nullable: true)]
     protected ?int $seats = 1;
 
+    /** A key and downloads, nothing posted: checkout asks for no address. */
+    public function isShippable(): bool
+    {
+        return false;
+    }
+
     public function getSoftware(): ?Software { return $this->software; }
     public function setSoftware(?Software $software): self { $this->software = $software; return $this; }
 

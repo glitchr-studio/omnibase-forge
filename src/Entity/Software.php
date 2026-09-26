@@ -2,138 +2,142 @@
 
 namespace Base\Forge\Entity;
 
+use Base\Database\Attribute\DiscriminatorEntry;
+use Base\Entity\Thread;
+use Base\Entity\User;
+use Base\Enum\ThreadState;
 use Base\Forge\Entity\Product\LicenseOffer;
 use Base\Forge\Enum\Pricing;
 use Base\Forge\Enum\SoftwareStatus;
 use Base\Forge\Repository\SoftwareRepository;
+use Base\Service\Model\LinkableInterface;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * Something the studio made and shows: a client site, a bundle, a JavaScript
- * library, a tool. It is on the applications page; with a git repository it
- * gets releases; FREE ones download for anyone, LICENSED ones against a
- * licence bought through one of its LicenseOffer products.
+ * library, a tool. A base-bundle thread, as market's stores and products are:
+ * its title, headline and content are translated (FR/EN), its slug and state
+ * come with it - published, it is on the applications page. With a git
+ * repository it gets releases; FREE ones download for anyone, LICENSED ones
+ * against a licence bought through one of its LicenseOffer products.
  */
 #[ORM\Entity(repositoryClass: SoftwareRepository::class)]
-#[ORM\Table(name: 'forge_software')]
-class Software implements \Stringable
+#[DiscriminatorEntry(value: 'forge_software')]
+class Software extends Thread implements LinkableInterface
 {
     public const CATEGORIES = ['site', 'bundle', 'javascript', 'tool'];
 
-    #[ORM\Id, ORM\GeneratedValue, ORM\Column]
-    private ?int $id = null;
+    public static function __iconizeStatic(): ?array
+    {
+        return ['fa-solid fa-cubes'];
+    }
 
-    #[ORM\Column(length: 96, unique: true)]
-    #[Assert\NotBlank, Assert\Regex('/^[a-z0-9][a-z0-9\-]*$/')]
-    private string $slug = '';
+    public function __toLink(array $routeParameters = [], int $referenceType = UrlGeneratorInterface::ABSOLUTE_PATH): ?string
+    {
+        return $this->getRouter()->generate('forge_software', array_merge($routeParameters, ['slug' => $this->getSlug()]), $referenceType);
+    }
 
-    #[ORM\Column(length: 128)]
-    #[Assert\NotBlank]
-    private string $name = '';
-
-    #[ORM\Column(length: 255, nullable: true)]
-    private ?string $tagline = null;
-
-    #[ORM\Column(type: 'text', nullable: true)]
-    private ?string $description = null;
-
-    #[ORM\Column(length: 16)]
+    #[ORM\Column(length: 16, nullable: true)]
     #[Assert\Choice(choices: self::CATEGORIES)]
-    private string $category = 'site';
+    protected ?string $category = 'site';
 
-    #[ORM\Column(length: 16, enumType: SoftwareStatus::class)]
-    private SoftwareStatus $status = SoftwareStatus::LIVE;
+    #[ORM\Column(length: 16, nullable: true, enumType: SoftwareStatus::class)]
+    protected ?SoftwareStatus $status = SoftwareStatus::LIVE;
 
-    #[ORM\Column(length: 16, enumType: Pricing::class)]
-    private Pricing $pricing = Pricing::FREE;
+    #[ORM\Column(length: 16, nullable: true, enumType: Pricing::class)]
+    protected ?Pricing $pricing = Pricing::FREE;
 
-    /** @var list<string> */
-    #[ORM\Column(type: 'json')]
-    private array $stack = [];
-
-    #[ORM\Column(length: 255, nullable: true)]
-    #[Assert\Url]
-    private ?string $homepage = null;
+    /** @var list<string>|null */
+    #[ORM\Column(type: 'json', nullable: true)]
+    protected ?array $stack = [];
 
     #[ORM\Column(length: 255, nullable: true)]
     #[Assert\Url]
-    private ?string $sourceUrl = null;
+    protected ?string $homepage = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    #[Assert\Url]
+    protected ?string $sourceUrl = null;
 
     /**
      * Where the repository is cloned from (git:sync, the warmer) when it is
      * not declared in git.repositories: forge.repositories_dir/<repository>.git.
      */
     #[ORM\Column(length: 255, nullable: true)]
-    private ?string $repositoryUrl = null;
+    protected ?string $repositoryUrl = null;
 
     /** The name git/git-bundle knows the repository by (git.repositories.<name>). */
     #[ORM\Column(length: 96, nullable: true)]
-    private ?string $repository = null;
+    protected ?string $gitRepository = null;
 
     /** vendor/name in the Composer repository, for a PHP package. */
     #[ORM\Column(length: 128, nullable: true)]
     #[Assert\Regex('/^[a-z0-9]([_.-]?[a-z0-9]+)*\/[a-z0-9](([_.]|-{1,2})?[a-z0-9]+)*$/')]
-    private ?string $packageName = null;
+    protected ?string $packageName = null;
 
     /** A path under the public assets, or an absolute URL, for the card. */
     #[ORM\Column(length: 255, nullable: true)]
-    private ?string $image = null;
+    protected ?string $image = null;
 
     /** The live application, shown in a nested panel from the card. */
     #[ORM\Column(length: 255, nullable: true)]
     #[Assert\Url]
-    private ?string $demoUrl = null;
+    protected ?string $demoUrl = null;
 
-    #[ORM\Column]
-    private bool $visible = true;
-
-    #[ORM\Column]
-    private int $position = 0;
+    #[ORM\Column(nullable: true)]
+    protected ?int $position = 0;
 
     #[ORM\Column(length: 4, nullable: true)]
-    private ?string $year = null;
+    protected ?string $year = null;
 
     /** @var Collection<int, Release> */
     #[ORM\OneToMany(targetEntity: Release::class, mappedBy: 'software', cascade: ['persist', 'remove'], orphanRemoval: true)]
     #[ORM\OrderBy(['publishedAt' => 'DESC'])]
-    private Collection $releases;
+    protected Collection $releases;
 
     /** @var Collection<int, LicenseOffer> */
     #[ORM\OneToMany(targetEntity: LicenseOffer::class, mappedBy: 'software')]
-    private Collection $offers;
+    protected Collection $offers;
 
-    #[ORM\Column(type: 'datetime_immutable')]
-    private \DateTimeImmutable $createdAt;
-
-    public function __construct(string $name = '', string $slug = '')
+    public function __construct(?User $owner = null, ?string $title = null, ?string $slug = null)
     {
-        $this->name = $name;
-        $this->slug = $slug;
+        parent::__construct($owner, null, $title, $slug);
         $this->releases = new ArrayCollection();
         $this->offers = new ArrayCollection();
-        $this->createdAt = new \DateTimeImmutable();
     }
 
-    public function __toString(): string { return $this->name; }
+    /** The title, as the templates and the admin call it. */
+    public function getName(): string { return (string) $this->getTitle(); }
+    public function setName(string $name): self { $this->setTitle($name); return $this; }
 
-    public function getId(): ?int { return $this->id; }
+    /** The one-liner under the name: the thread's (translated) headline. */
+    public function getTagline(): ?string { return $this->getHeadline(); }
+    public function setTagline(?string $tagline): self { $this->setHeadline($tagline); return $this; }
 
-    public function getSlug(): string { return $this->slug; }
-    public function setSlug(string $slug): self { $this->slug = $slug; return $this; }
+    /** The long text: the thread's (translated) content. */
+    public function getDescription(): ?string { return $this->getContent(); }
+    public function setDescription(?string $description): self { $this->setContent($description); return $this; }
 
-    public function getName(): string { return $this->name; }
-    public function setName(string $name): self { $this->name = $name; return $this; }
+    /**
+     * Publish (or withdraw) it: on the applications page and downloadable
+     * once published - Thread::isVisible() then says so, drafts staying
+     * visible to their owners and the admins.
+     */
+    public function publish(bool $visible = true): self
+    {
+        $this->setState($visible ? ThreadState::PUBLISH : ThreadState::DRAFT);
+        if ($visible && !$this->getPublishedAt()) {
+            $this->setPublishedAt(new \DateTime());
+        }
 
-    public function getTagline(): ?string { return $this->tagline; }
-    public function setTagline(?string $tagline): self { $this->tagline = $tagline; return $this; }
+        return $this;
+    }
 
-    public function getDescription(): ?string { return $this->description; }
-    public function setDescription(?string $description): self { $this->description = $description; return $this; }
-
-    public function getCategory(): string { return $this->category; }
+    public function getCategory(): string { return $this->category ?? 'site'; }
     public function setCategory(string $category): self
     {
         if (!\in_array($category, self::CATEGORIES, true)) {
@@ -144,20 +148,20 @@ class Software implements \Stringable
         return $this;
     }
 
-    public function getStatus(): SoftwareStatus { return $this->status; }
+    public function getStatus(): SoftwareStatus { return $this->status ?? SoftwareStatus::LIVE; }
     public function setStatus(SoftwareStatus $status): self { $this->status = $status; return $this; }
 
-    public function getPricing(): Pricing { return $this->pricing; }
+    public function getPricing(): Pricing { return $this->pricing ?? Pricing::FREE; }
     public function setPricing(Pricing $pricing): self { $this->pricing = $pricing; return $this; }
-    public function isFree(): bool { return $this->pricing->isFree(); }
+    public function isFree(): bool { return $this->getPricing()->isFree(); }
 
     /** @return list<string> */
-    public function getStack(): array { return $this->stack; }
+    public function getStack(): array { return $this->stack ?? []; }
     /** @param list<string> $stack */
     public function setStack(array $stack): self { $this->stack = array_values(array_filter(array_map('trim', $stack))); return $this; }
 
     /** The stack as the back office edits it: "Symfony, TransparentJS". */
-    public function getStackAsText(): string { return implode(', ', $this->stack); }
+    public function getStackAsText(): string { return implode(', ', $this->getStack()); }
     public function setStackAsText(?string $stack): self { return $this->setStack(explode(',', (string) $stack)); }
 
     public function getHomepage(): ?string { return $this->homepage; }
@@ -169,8 +173,8 @@ class Software implements \Stringable
     public function getRepositoryUrl(): ?string { return $this->repositoryUrl; }
     public function setRepositoryUrl(?string $repositoryUrl): self { $this->repositoryUrl = $repositoryUrl ?: null; return $this; }
 
-    public function getRepository(): ?string { return $this->repository; }
-    public function setRepository(?string $repository): self { $this->repository = $repository; return $this; }
+    public function getGitRepository(): ?string { return $this->gitRepository; }
+    public function setGitRepository(?string $gitRepository): self { $this->gitRepository = $gitRepository ?: null; return $this; }
 
     public function getPackageName(): ?string { return $this->packageName; }
     public function setPackageName(?string $packageName): self { $this->packageName = $packageName; return $this; }
@@ -181,10 +185,7 @@ class Software implements \Stringable
     public function getDemoUrl(): ?string { return $this->demoUrl; }
     public function setDemoUrl(?string $demoUrl): self { $this->demoUrl = $demoUrl; return $this; }
 
-    public function isVisible(): bool { return $this->visible; }
-    public function setVisible(bool $visible): self { $this->visible = $visible; return $this; }
-
-    public function getPosition(): int { return $this->position; }
+    public function getPosition(): int { return (int) $this->position; }
     public function setPosition(int $position): self { $this->position = $position; return $this; }
 
     public function getYear(): ?string { return $this->year; }
@@ -227,6 +228,4 @@ class Software implements \Stringable
 
     /** @return Collection<int, LicenseOffer> */
     public function getOffers(): Collection { return $this->offers; }
-
-    public function getCreatedAt(): \DateTimeImmutable { return $this->createdAt; }
 }

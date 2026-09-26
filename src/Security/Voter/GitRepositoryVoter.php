@@ -53,7 +53,7 @@ final class GitRepositoryVoter extends Voter
             return true;
         }
 
-        $software = $this->software->findOneBy(['repository' => $subject]);
+        $software = $this->software->findOneBy(['gitRepository' => $subject]);
         if ($software && $software->isVisible()) {
             return $software->isFree() || [] !== $this->licenses->findValidFor($user, $software);
         }

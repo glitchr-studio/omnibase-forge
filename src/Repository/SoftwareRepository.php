@@ -2,6 +2,7 @@
 
 namespace Base\Forge\Repository;
 
+use Base\Enum\ThreadState;
 use Base\Forge\Entity\Software;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -14,12 +15,12 @@ class SoftwareRepository extends ServiceEntityRepository
         parent::__construct($registry, Software::class);
     }
 
-    /** @return list<Software> what the applications page shows, in its order */
+    /** @return list<Software> the published ones, in the applications page's order */
     public function findVisible(): array
     {
         return $this->createQueryBuilder('s')
-            ->andWhere('s.visible = true')
-            ->orderBy('s.position', 'ASC')->addOrderBy('s.name', 'ASC')
+            ->andWhere('s.state = :published')->setParameter('published', ThreadState::PUBLISH)
+            ->orderBy('s.position', 'ASC')->addOrderBy('s.id', 'ASC')
             ->getQuery()->getResult();
     }
 
@@ -28,9 +29,9 @@ class SoftwareRepository extends ServiceEntityRepository
     {
         return $this->createQueryBuilder('s')
             ->innerJoin('s.releases', 'r')->addSelect('r')
-            ->andWhere('s.visible = true')
+            ->andWhere('s.state = :published')->setParameter('published', ThreadState::PUBLISH)
             ->andWhere('r.publishedAt IS NOT NULL AND r.publishedAt <= CURRENT_TIMESTAMP()')
-            ->orderBy('s.position', 'ASC')->addOrderBy('s.name', 'ASC')->addOrderBy('r.publishedAt', 'DESC')
+            ->orderBy('s.position', 'ASC')->addOrderBy('s.id', 'ASC')->addOrderBy('r.publishedAt', 'DESC')
             ->getQuery()->getResult();
     }
 
@@ -38,7 +39,7 @@ class SoftwareRepository extends ServiceEntityRepository
     public function findWithRepository(): array
     {
         return $this->createQueryBuilder('s')
-            ->andWhere('s.repository IS NOT NULL')
+            ->andWhere('s.gitRepository IS NOT NULL')
             ->getQuery()->getResult();
     }
 

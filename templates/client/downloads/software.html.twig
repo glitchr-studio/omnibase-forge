@@ -4,7 +4,7 @@
 {% block forge_lead %}{{ software.tagline }}{% endblock %}
 {% block forge_class %}forge-software{% endblock %}
 {% block background %}diagmonds-light{% endblock %}
-{% block description %}{{ software.tagline ?? software.description|striptags|u.truncate(160, '…') }}{% endblock %}
+{% block description %}{{ software.tagline ?? software.description|striptags|slice(0, 160) }}{% endblock %}
 
 {% block forge_actions %}
     {% if software.sourceUrl %}<a class="forge-link" href="{{ software.sourceUrl }}" target="_blank" rel="noopener"><i class="fa-brands fa-git-alt"></i> {{ '@forge.software.source'|trans }}</a>{% endif %}
