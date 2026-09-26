@@ -1,0 +1,83 @@
+{% extends '@Forge/client/layout.html.twig' %}
+
+{% block forge_title %}{{ software.name }}{% endblock %}
+{% block forge_lead %}{{ software.tagline }}{% endblock %}
+{% block forge_class %}forge-software{% endblock %}
+{% block background %}diagmonds-light{% endblock %}
+{% block description %}{{ software.tagline ?? software.description|striptags|u.truncate(160, '…') }}{% endblock %}
+
+{% block forge_actions %}
+    {% if software.sourceUrl %}<a class="forge-link" href="{{ software.sourceUrl }}" target="_blank" rel="noopener"><i class="fa-brands fa-git-alt"></i> {{ '@forge.software.source'|trans }}</a>{% endif %}
+    {% if software.homepage %}<a class="forge-link" href="{{ software.homepage }}" target="_blank" rel="noopener"><i class="fa-solid fa-arrow-up-right-from-square"></i> {{ '@forge.software.homepage'|trans }}</a>{% endif %}
+{% endblock %}
+
+{% block forge_body %}
+<div class="forge-columns">
+    <div class="forge-main">
+        {% if software.description %}<div class="forge-prose">{{ software.description|nl2br }}</div>{% endif %}
+
+        <h2>{{ '@forge.software.releases'|trans }}</h2>
+        <ol class="forge-releases">
+        {% for release in software.releases|filter(r => r.published) %}
+            {% set covered = software.free or is_granted('ROLE_STAFF') or licenses|filter(l => l.covers(release))|length > 0 %}
+            <li>
+                <header>
+                    <strong>{{ release.version }}</strong>
+                    {% if release.publishedAt %}<time datetime="{{ release.publishedAt|date('c') }}">{{ release.publishedAt|format_date('long') }}</time>{% endif %}
+                    {% if release.commitSha %}<code>{{ release.commitSha|slice(0, 8) }}</code>{% endif %}
+                    {% if release.artifact('zip') %}
+                        {% if covered %}
+                            <a class="forge-link" href="{{ path('forge_download', {slug: software.slug, version: release.version}) }}"><i class="fa-solid fa-download"></i> zip</a>
+                        {% else %}
+                            <span class="forge-muted"><i class="fa-solid fa-lock"></i> {{ '@forge.software.not_covered'|trans }}</span>
+                        {% endif %}
+                    {% endif %}
+                </header>
+                {% if release.changelog %}<pre class="forge-changelog">{{ release.changelog }}</pre>{% endif %}
+                {% if release.artifact('zip') %}<p class="forge-meta">sha256 <code>{{ release.artifact('zip').sha256 }}</code></p>{% endif %}
+            </li>
+        {% else %}
+            <li class="forge-empty">{{ '@forge.software.no_release'|trans }}</li>
+        {% endfor %}
+        </ol>
+    </div>
+
+    <aside class="forge-side">
+        {% if software.free %}
+            <p class="forge-badge is-free">{{ '@forge.pricing.free'|trans }}</p>
+            <p>{{ '@forge.software.free_text'|trans }}</p>
+        {% elseif licenses|length %}
+            <p class="forge-badge is-licensed">{{ '@forge.software.licensed_yours'|trans }}</p>
+            <p><a href="{{ path('forge_account_licenses') }}">{{ '@forge.software.manage'|trans }}</a></p>
+        {% else %}
+            <h2>{{ '@forge.software.buy'|trans }}</h2>
+            {% for offer in offers %}
+            <div class="forge-offer">
+                <strong>{{ offer.title }}</strong>
+                <span class="forge-price">{{ offer.unitPrice|forge_money(offer.currency) }}</span>
+                <p class="forge-meta">
+                    {{ '@forge.offer.seats'|trans({count: offer.seats}) }} ·
+                    {{ offer.durationMonths ? '@forge.offer.duration'|trans({months: offer.durationMonths}) : '@forge.offer.perpetual'|trans }} ·
+                    {{ offer.updatesMonths ? '@forge.offer.updates'|trans({months: offer.updatesMonths}) : '@forge.offer.all_updates'|trans }}
+                </p>
+                {% if is_granted('ROLE_USER') %}
+                <form method="post" action="{{ path('market_cart_add', {id: offer.id}) }}">
+                    <input type="hidden" name="_token" value="{{ csrf_token('market_cart') }}">
+                    <button type="submit" class="forge-btn forge-btn-primary"><span>{{ '@forge.offer.add'|trans }}</span></button>
+                </form>
+                {% else %}
+                    {% include '@Forge/client/_cta.html.twig' with {href: path('security_login', {_target_path: app.request.requestUri}), label: '@forge.offer.login'|trans} %}
+                {% endif %}
+            </div>
+            {% else %}
+            <p>{{ '@forge.software.no_offer'|trans }}</p>
+            {% endfor %}
+        {% endif %}
+
+        {% if software.packageName %}
+        <h2>Composer</h2>
+        <pre class="forge-code"><code>composer require {{ software.packageName }}</code></pre>
+        {% endif %}
+    </aside>
+</div>
+{% endblock %}

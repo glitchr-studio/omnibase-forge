@@ -1,0 +1,104 @@
+{% extends '@Forge/client/layout.html.twig' %}
+
+{% block forge_title %}{{ '@forge.account.title'|trans }}{% endblock %}
+{% block forge_lead %}{{ '@forge.account.lead'|trans }}{% endblock %}
+{% block forge_class %}forge-account{% endblock %}
+{% block background %}whitey{% endblock %}
+
+{% block forge_actions %}
+    <p class="forge-balance{{ balance < 120 ? ' is-low' }}">
+        <span>{{ '@forge.hours.balance'|trans }}</span>
+        <strong>{{ balance|forge_hours }}</strong>
+    </p>
+{% endblock %}
+
+{% block forge_body %}
+{% if key %}
+<section class="forge-key" role="alert">
+    <h2><i class="fa-solid fa-key"></i> {{ '@forge.license.new_key'|trans({software: key.license.software.name}) }}</h2>
+    <p>{{ '@forge.license.new_key_help'|trans }}</p>
+    <pre class="forge-code"><code>{{ key.value }}</code></pre>
+    <pre class="forge-code"><code>composer config http-basic.{{ app.request.host }} {{ app.user.email }} {{ key.value }}</code></pre>
+</section>
+{% endif %}
+
+<section class="forge-section">
+    <h2><i class="fa-solid fa-certificate"></i> {{ '@forge.account.licenses'|trans }}</h2>
+    <div class="forge-table-wrap">
+    <table class="forge-table">
+        <thead><tr>
+            <th>{{ '@forge.license.software'|trans }}</th><th>{{ '@forge.license.status'|trans }}</th>
+            <th>{{ '@forge.license.expires'|trans }}</th><th>{{ '@forge.license.updates'|trans }}</th>
+            <th>{{ '@forge.license.key'|trans }}</th><th></th>
+        </tr></thead>
+        <tbody>
+        {% for license in licenses %}
+            <tr>
+                <td><a href="{{ path('forge_software', {slug: license.software.slug}) }}">{{ license.software.name }}</a></td>
+                <td><span class="forge-badge is-{{ license.valid ? 'active' : license.status.value }}">{{ ('@forge.license.statuses.' ~ (license.valid ? 'active' : (license.status.value == 'active' ? 'expired' : license.status.value)))|trans }}</span></td>
+                <td>{{ license.expiresAt ? license.expiresAt|format_date('medium') : '@forge.license.never'|trans }}</td>
+                <td>{{ license.updatesUntil ? license.updatesUntil|format_date('medium') : '@forge.license.all'|trans }}</td>
+                <td>{% if license.hasKey %}<code>{{ license.keyPrefix }}…</code>{% else %}—{% endif %}</td>
+                <td>
+                    {% if license.valid %}
+                    <form method="post" action="{{ path('forge_license_rekey', {id: license.id}) }}" data-confirm="{{ license.hasKey ? '@forge.license.rekey_confirm'|trans }}">
+                        <input type="hidden" name="_token" value="{{ csrf_token('forge_license_' ~ license.id) }}">
+                        <button type="submit" class="forge-link">{{ (license.hasKey ? '@forge.license.rekey' : '@forge.license.generate')|trans }}</button>
+                    </form>
+                    {% endif %}
+                </td>
+            </tr>
+        {% else %}
+            <tr><td colspan="6" class="forge-empty">{{ '@forge.account.no_license'|trans }} <a href="{{ path('forge_downloads') }}">{{ '@forge.downloads.title'|trans }}</a></td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    </div>
+</section>
+
+{% if quotes|length %}
+<section class="forge-section">
+    <h2><i class="fa-solid fa-file-invoice"></i> {{ '@forge.account.quotes'|trans }}</h2>
+    <ul class="forge-list">
+    {% for quote in quotes|filter(q => q.status.value not in ['requested', 'draft']) %}
+        <li><a href="{{ path('forge_quote', {token: quote.token}) }}">{{ quote.reference }} · {{ quote.title }}</a>
+            <span class="forge-badge is-{{ quote.status.value }}">{{ ('@forge.quote.status.' ~ quote.status.value)|trans }}</span>
+            <span class="forge-meta">{{ quote.total|forge_money(quote.currency) }}</span></li>
+    {% endfor %}
+    {% for quote in quotes|filter(q => q.status.value in ['requested', 'draft']) %}
+        <li>{{ quote.reference }} · {{ quote.title }} <span class="forge-badge">{{ ('@forge.quote.status.' ~ quote.status.value)|trans }}</span></li>
+    {% endfor %}
+    </ul>
+</section>
+{% endif %}
+
+<section class="forge-section">
+    <h2><i class="fa-solid fa-hourglass-half"></i> {{ '@forge.account.hours'|trans }}</h2>
+    <div class="forge-table-wrap">
+    <table class="forge-table">
+        <tbody>
+        {% for line in history %}
+            <tr>
+                <td>{{ line.createdAt|format_date('medium') }}</td>
+                <td>{{ ('@forge.hours.reason.' ~ line.reason.value)|trans }}{% if line.note %} — {{ line.note }}{% endif %}{% if line.timeEntry %} — {{ line.timeEntry.note }}{% endif %}</td>
+                <td class="num {{ line.minutes < 0 ? 'is-debit' : 'is-credit' }}">{{ line.minutes > 0 ? '+' }}{{ line.minutes|forge_hours }}</td>
+            </tr>
+        {% else %}
+            <tr><td class="forge-empty">{{ '@forge.account.no_hours'|trans }} <a href="{{ path('forge_shop') }}">{{ '@forge.shop.title'|trans }}</a></td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    </div>
+</section>
+
+{% if downloads|length %}
+<section class="forge-section">
+    <h2><i class="fa-solid fa-download"></i> {{ '@forge.account.downloads'|trans }}</h2>
+    <ul class="forge-list">
+    {% for download in downloads %}
+        <li>{{ download.artifact.release }} <span class="forge-meta">{{ download.downloadedAt|format_datetime('medium', 'short') }} · {{ download.channel }}</span></li>
+    {% endfor %}
+    </ul>
+</section>
+{% endif %}
+{% endblock %}

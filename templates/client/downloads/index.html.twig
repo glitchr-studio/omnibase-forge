@@ -1,0 +1,45 @@
+{% extends '@Forge/client/layout.html.twig' %}
+
+{% block forge_title %}{{ '@forge.downloads.title'|trans }}{% endblock %}
+{% block forge_lead %}{{ '@forge.downloads.lead'|trans }}{% endblock %}
+{% block forge_class %}forge-downloads{% endblock %}
+{% block background %}diagmonds-light{% endblock %}
+
+{% block forge_body %}
+<div class="forge-grid">
+{% for item in software %}
+    {% set latest = item.latestRelease %}
+    {% set held = licenses[item.id] ?? [] %}
+    <article class="forge-card">
+        <header>
+            <h2><a href="{{ path('forge_software', {slug: item.slug}) }}">{{ item.name }}</a></h2>
+            <span class="forge-badge {{ item.free ? 'is-free' : 'is-licensed' }}">{{ (item.free ? '@forge.pricing.free' : '@forge.pricing.licensed')|trans }}</span>
+        </header>
+        {% if item.tagline %}<p>{{ item.tagline }}</p>{% endif %}
+        {% if latest %}
+        <p class="forge-meta">
+            {{ '@forge.downloads.latest'|trans({version: latest.version}) }}
+            {% if latest.publishedAt %}· {{ latest.publishedAt|format_date('medium') }}{% endif %}
+            {% if latest.artifact('zip') %}· {{ (latest.artifact('zip').size / 1024)|round(0, 'ceil') }} Ko{% endif %}
+        </p>
+        {% endif %}
+        {% if item.packageName %}<code class="forge-package">composer require {{ item.packageName }}</code>{% endif %}
+        <footer>
+            {% if latest and (item.free or held|length or is_granted('ROLE_STAFF')) %}
+                {% include '@Forge/client/_cta.html.twig' with {href: path('forge_download', {slug: item.slug, version: latest.version}), label: '@forge.downloads.download'|trans} %}
+            {% else %}
+                {% include '@Forge/client/_cta.html.twig' with {href: path('forge_software', {slug: item.slug}), label: '@forge.downloads.get_license'|trans} %}
+            {% endif %}
+        </footer>
+    </article>
+{% else %}
+    <p class="forge-empty">{{ '@forge.downloads.empty'|trans }}</p>
+{% endfor %}
+</div>
+
+<section class="forge-band">
+    <p>{{ '@forge.composer.lead'|trans }}</p>
+    <pre class="forge-code"><code>composer config repositories.glitchr composer {{ app.request.schemeAndHttpHost }}/composer
+composer config http-basic.{{ app.request.host }} &lt;e-mail&gt; &lt;{{ '@forge.composer.key'|trans }}&gt;</code></pre>
+</section>
+{% endblock %}

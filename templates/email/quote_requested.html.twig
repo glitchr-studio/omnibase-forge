@@ -1,0 +1,9 @@
+{% extends 'email.html.twig' %}
+
+{% block subject %}Demande de devis {{ quote.reference }}{% endblock %}
+
+{% block content %}
+<p><strong>{{ quote.contactName }}</strong> &lt;{{ quote.email }}&gt; demande un devis : <strong>{{ quote.title }}</strong> ({{ quote.reference }}).</p>
+<p style="white-space: pre-line">{{ quote.request }}</p>
+<p>À chiffrer dans l'administration : Forge → Devis.</p>
+{% endblock %}

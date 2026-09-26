@@ -1,0 +1,21 @@
+{#
+ # The forge's pages inside the host's layout (layout1.html.twig), as
+ # base-bundle-market's are: a heading, the flashes, then `forge_body`.
+ #}
+{% extends 'layout1.html.twig' %}
+
+{% block title %}{{ block('forge_title') is defined ? block('forge_title') : '@forge.downloads.title'|trans }}{% endblock %}
+
+{% block content %}
+<div class="forge{{ block('forge_class') is defined ? ' ' ~ block('forge_class') }}">
+    <header class="forge-header content-header">
+        <div>
+            <h1 class="title" data-glitch="{{ block('forge_title')|striptags|trim }}">{{ block('forge_title') }}</h1>
+            {% if block('forge_lead') is defined %}<p class="lead">{{ block('forge_lead') }}</p>{% endif %}
+        </div>
+        {% if block('forge_actions') is defined %}<div class="content-header-actions">{{ block('forge_actions') }}</div>{% endif %}
+    </header>
+
+    {% block forge_body %}{% endblock %}
+</div>
+{% endblock %}

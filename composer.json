@@ -1,0 +1,110 @@
+{
+    "name": "glitchr/base-bundle-forge",
+    "type": "symfony-bundle",
+    "description": "Software forge for base-bundle: releases built from git tags, free and licensed downloads, a private Composer repository, client projects with a shared board, prepaid support hours and quotes - paid through base-bundle-market",
+    "keywords": [
+        "symfony",
+        "forge",
+        "licensing",
+        "downloads",
+        "composer",
+        "support",
+        "time-tracking",
+        "quotes",
+        "git"
+    ],
+    "homepage": "https://gitlab.glitchr.dev/public-repository/symfony/bundle/base/extension/base-bundle-forge",
+    "license": "LGPL-3.0-or-later",
+    "authors": [
+        {
+            "name": "Marco Meyer",
+            "email": "marco.meyer@glitchr.io"
+        }
+    ],
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://gitlab.glitchr.dev/public-repository/agnostic/backup-manager"
+        },
+        {
+            "type": "vcs",
+            "url": "https://gitlab.glitchr.dev/public-repository/symfony/bundle/base/component"
+        },
+        {
+            "type": "vcs",
+            "url": "https://gitlab.glitchr.dev/public-repository/symfony/bundle/base/extension/admin"
+        },
+        {
+            "type": "vcs",
+            "url": "https://gitlab.glitchr.dev/public-repository/symfony/bundle/base/extension/marketplace"
+        },
+        {
+            "type": "vcs",
+            "url": "https://gitlab.glitchr.dev/public-repository/symfony/bundle/base/plugin"
+        },
+        {
+            "type": "vcs",
+            "url": "https://gitlab.glitchr.dev/public-repository/symfony/bundle/doctrine-dc2type"
+        },
+        {
+            "type": "vcs",
+            "url": "https://gitlab.glitchr.dev/public-repository/symfony/bundle/well-known"
+        },
+        {
+            "type": "vcs",
+            "url": "https://gitlab.glitchr.dev/public-repository/symfony/bundle/ux/google-api"
+        },
+        {
+            "type": "vcs",
+            "url": "https://gitlab.glitchr.dev/public-repository/agnostic/git"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Base\\Forge\\": "./src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\Base\\Forge\\": "./tests"
+        }
+    },
+    "require": {
+        "php": "^8.2",
+        "ext-zip": "*",
+        "doctrine/orm": "^2.15|^3.0",
+        "git/git-bundle": "1.0.x-dev",
+        "glitchr/base-bundle": "3.0.*-dev",
+        "glitchr/base-bundle-admin": "dev-main",
+        "glitchr/base-bundle-market": "dev-main",
+        "symfony/config": "^6.0|^7.0|^8.0",
+        "symfony/dependency-injection": "^6.0|^7.0|^8.0",
+        "symfony/form": "^6.0|^7.0|^8.0",
+        "symfony/http-kernel": "^6.0|^7.0|^8.0",
+        "symfony/security-bundle": "^6.0|^7.0|^8.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.6|^10.5",
+        "symfony/console": "^6.0|^7.0|^8.0",
+        "symfony/framework-bundle": "^6.0|^7.0|^8.0",
+        "symfony/twig-bundle": "^6.0|^7.0|^8.0"
+    },
+    "suggest": {
+        "ext-git2": "Required by git/git-bundle to read repositories (releases, the project dashboard's history)"
+    },
+    "scripts": {
+        "test": "phpunit"
+    },
+    "config": {
+        "preferred-install": {
+            "*": "dist"
+        },
+        "sort-packages": true,
+        "minimum-stability": "dev",
+        "allow-plugins": {
+            "glitchr/base-plugin": true,
+            "glitchr/doctrine-dc2type": true,
+            "php-http/discovery": true
+        }
+    }
+}

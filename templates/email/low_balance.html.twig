@@ -1,0 +1,15 @@
+{% extends 'email.html.twig' %}
+
+{% block subject %}Vos heures de support{% endblock %}
+{% block action_url %}{{ url('forge_shop') }}{% endblock %}
+{% block action_text %}Recharger mes heures{% endblock %}
+
+{% block content %}
+<p>Bonjour {{ user }},</p>
+{% if balance < 0 %}
+<p>Le temps passé sur vos projets dépasse vos heures de support de {{ (-balance)|forge_hours }}.</p>
+{% else %}
+<p>Il vous reste {{ balance|forge_hours }} de support.</p>
+{% endif %}
+<p>Pour que nous puissions continuer sans interruption, vous pouvez recharger vos heures en ligne.</p>
+{% endblock %}

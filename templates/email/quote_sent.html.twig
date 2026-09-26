@@ -1,0 +1,11 @@
+{% extends 'email.html.twig' %}
+
+{% block subject %}Votre devis {{ quote.reference }}{% endblock %}
+{% block action_url %}{{ url('forge_quote', {token: quote.token}) }}{% endblock %}
+{% block action_text %}Voir le devis{% endblock %}
+
+{% block content %}
+<p>Bonjour {{ quote.contactName }},</p>
+<p>Voici notre proposition pour « {{ quote.title }} » : {{ quote.totalMinutes|forge_hours }} de travail, {{ quote.total|forge_money(quote.currency) }}{% if quote.discountPercent %} (remise de {{ quote.discountPercent }} % comprise){% endif %}.</p>
+{% if quote.validUntil %}<p>Elle est valable jusqu'au {{ quote.validUntil|format_date('long', locale: 'fr') }}. Vous pouvez l'accepter et la régler en ligne depuis le lien ci-dessous.</p>{% endif %}
+{% endblock %}

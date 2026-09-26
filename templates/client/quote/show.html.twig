@@ -1,0 +1,49 @@
+{% extends '@Forge/client/layout.html.twig' %}
+
+{% block forge_title %}{{ quote.title }}{% endblock %}
+{% block forge_lead %}{{ '@forge.quote.for'|trans({reference: quote.reference, name: quote.contactName}) }}{% endblock %}
+{% block forge_class %}forge-quote{% endblock %}
+{% block background %}45-degree-fabric-dark{% endblock %}
+
+{% block forge_actions %}
+    <span class="forge-badge is-{{ quote.status.value }}">{{ ('@forge.quote.status.' ~ quote.status.value)|trans }}</span>
+{% endblock %}
+
+{% block forge_body %}
+{% if quote.message %}<div class="forge-prose">{{ quote.message|nl2br }}</div>{% endif %}
+
+<div class="forge-table-wrap">
+<table class="forge-table">
+    <thead><tr><th>{{ '@forge.quote.line.label'|trans }}</th><th class="num">{{ '@forge.quote.line.hours'|trans }}</th><th class="num">{{ '@forge.quote.line.rate'|trans }}</th><th class="num">{{ '@forge.quote.line.amount'|trans }}</th></tr></thead>
+    <tbody>
+    {% for line in quote.lines %}
+        <tr><td>{{ line.label }}</td><td class="num">{{ line.minutes|forge_hours }}</td><td class="num">{{ line.hourlyRate|forge_money(quote.currency) }}</td><td class="num">{{ line.amount|forge_money(quote.currency) }}</td></tr>
+    {% endfor %}
+    </tbody>
+    <tfoot>
+        {% if quote.discountPercent %}
+        <tr><td colspan="3">{{ '@forge.quote.subtotal'|trans }}</td><td class="num">{{ quote.subtotal|forge_money(quote.currency) }}</td></tr>
+        <tr><td colspan="3">{{ '@forge.quote.discount'|trans({percent: quote.discountPercent}) }}</td><td class="num">-{{ quote.discountAmount|forge_money(quote.currency) }}</td></tr>
+        {% endif %}
+        <tr class="forge-total"><td>{{ '@forge.quote.total'|trans }}</td><td class="num">{{ quote.totalMinutes|forge_hours }}</td><td></td><td class="num">{{ quote.total|forge_money(quote.currency) }}</td></tr>
+    </tfoot>
+</table>
+</div>
+
+<section class="forge-quote-actions">
+{% if quote.acceptable or awaiting_payment %}
+    {% if quote.validUntil %}<p class="forge-meta">{{ '@forge.quote.valid_until'|trans({date: quote.validUntil|format_date('long')}) }}</p>{% endif %}
+    {% if is_granted('ROLE_USER') %}
+    <form method="post" action="{{ path('forge_quote_accept', {token: quote.token}) }}">
+        <input type="hidden" name="_token" value="{{ csrf_token('forge_quote_' ~ quote.id) }}">
+        <button type="submit" class="forge-btn forge-btn-primary"><span>{{ (awaiting_payment ? '@forge.quote.pay' : '@forge.quote.accept')|trans }}</span><svg width="13" height="10" viewBox="0 0 13 10" aria-hidden="true"><path d="M1,5 L11,5"></path><polyline points="8 1 12 5 8 9"></polyline></svg></button>
+    </form>
+    <p class="forge-meta">{{ '@forge.quote.accept_help'|trans }}</p>
+    {% else %}
+        {% include '@Forge/client/_cta.html.twig' with {href: path('security_login', {_target_path: app.request.requestUri}), label: '@forge.quote.login'|trans} %}
+    {% endif %}
+{% elseif quote.expired %}
+    <p class="forge-meta">{{ '@forge.quote.expired'|trans }}</p>
+{% endif %}
+</section>
+{% endblock %}

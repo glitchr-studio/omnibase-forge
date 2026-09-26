@@ -1,0 +1,77 @@
+{% extends '@Forge/client/layout.html.twig' %}
+
+{% block forge_title %}{{ '@forge.shop.title'|trans }}{% endblock %}
+{% block forge_lead %}{{ '@forge.shop.lead'|trans }}{% endblock %}
+{% block forge_class %}forge-shop{% endblock %}
+{% block background %}45-degree-fabric-dark{% endblock %}
+
+{% block forge_actions %}
+    {% if balance is not null %}
+    <p class="forge-balance{{ balance < 120 ? ' is-low' }}">
+        <span>{{ '@forge.hours.balance'|trans }}</span>
+        <strong>{{ balance|forge_hours }}</strong>
+    </p>
+    {% endif %}
+{% endblock %}
+
+{% block forge_body %}
+{% if offers|length %}
+<section class="forge-section forge-offers">
+    <h2><i class="fa-solid fa-gift"></i> {{ '@forge.shop.offers'|trans }}</h2>
+    <div class="forge-grid">
+    {% for quote in offers %}
+        <article class="forge-card forge-card-offer">
+            <header><h3>{{ quote.title }}</h3><span class="forge-badge">{{ quote.reference }}</span></header>
+            <p class="forge-meta">{{ quote.totalMinutes|forge_hours }}
+                {% if quote.discountPercent %}· <strong>-{{ quote.discountPercent }} %</strong>{% endif %}
+                {% if quote.validUntil %}· {{ '@forge.quote.valid_until'|trans({date: quote.validUntil|format_date('medium')}) }}{% endif %}</p>
+            <p class="forge-price">{{ quote.total|forge_money(quote.currency) }}</p>
+            <footer>{% include '@Forge/client/_cta.html.twig' with {href: path('forge_quote', {token: quote.token}), label: '@forge.quote.open'|trans} %}</footer>
+        </article>
+    {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+<section class="forge-section">
+    <h2><i class="fa-solid fa-clock"></i> {{ '@forge.shop.packs'|trans }}</h2>
+    <p class="forge-meta">{{ '@forge.shop.packs_lead'|trans }}</p>
+    <div class="forge-grid">
+    {% for pack in packs %}
+        <article class="forge-card forge-pack">
+            <header><h3>{{ pack.title }}</h3></header>
+            <p class="forge-hours">{{ pack.minutes|forge_hours }}</p>
+            <p class="forge-price">{{ pack.unitPrice|forge_money(pack.currency) }}</p>
+            <p class="forge-meta">{{ '@forge.shop.per_hour'|trans({price: pack.hourlyPrice|forge_money(pack.currency)}) }}</p>
+            {% if pack.excerpt %}<p>{{ pack.excerpt|striptags }}</p>{% endif %}
+            <footer>
+            {% if is_granted('ROLE_USER') %}
+                <form method="post" action="{{ path('market_cart_add', {id: pack.id}) }}">
+                    <input type="hidden" name="_token" value="{{ csrf_token('market_cart') }}">
+                    <button type="submit" class="forge-btn forge-btn-primary"><span>{{ '@forge.shop.buy'|trans }}</span><svg width="13" height="10" viewBox="0 0 13 10" aria-hidden="true"><path d="M1,5 L11,5"></path><polyline points="8 1 12 5 8 9"></polyline></svg></button>
+                </form>
+            {% else %}
+                {% include '@Forge/client/_cta.html.twig' with {href: path('security_login', {_target_path: app.request.requestUri}), label: '@forge.offer.login'|trans} %}
+            {% endif %}
+            </footer>
+        </article>
+    {% else %}
+        <p class="forge-empty">{{ '@forge.shop.no_pack'|trans }}</p>
+    {% endfor %}
+    </div>
+</section>
+
+<section class="forge-band">
+    <p>{{ '@forge.shop.quote_lead'|trans }}</p>
+    {% include '@Forge/client/_cta.html.twig' with {href: path('forge_quote_request'), label: '@forge.shop.quote'|trans} %}
+</section>
+
+<section class="forge-section forge-how">
+    <h2>{{ '@forge.shop.how'|trans }}</h2>
+    <ol>
+        <li>{{ '@forge.shop.how_1'|trans }}</li>
+        <li>{{ '@forge.shop.how_2'|trans }}</li>
+        <li>{{ '@forge.shop.how_3'|trans }}</li>
+    </ol>
+</section>
+{% endblock %}

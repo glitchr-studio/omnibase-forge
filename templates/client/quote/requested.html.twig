@@ -1,0 +1,12 @@
+{% extends '@Forge/client/layout.html.twig' %}
+
+{% block forge_title %}{{ '@forge.quote.requested_title'|trans }}{% endblock %}
+{% block background %}45-degree-fabric-dark{% endblock %}
+
+{% block forge_body %}
+<section class="forge-done">
+    <i class="fa-solid fa-envelope-circle-check" aria-hidden="true"></i>
+    <p class="lead">{{ '@forge.quote.requested_text'|trans({reference: quote.reference, email: quote.email}) }}</p>
+    {% include '@Forge/client/_cta.html.twig' with {href: path('forge_shop'), label: '@forge.shop.title'|trans} %}
+</section>
+{% endblock %}
