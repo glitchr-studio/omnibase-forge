@@ -29,7 +29,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[DiscriminatorEntry(value: 'forge_software')]
 class Software extends Thread implements LinkableInterface
 {
-    public const CATEGORIES = ['site', 'bundle', 'javascript', 'tool'];
+    public const CATEGORIES = ['site', 'bundle', 'javascript', 'tool', 'game'];
 
     public static function __iconizeStatic(): ?array
     {
