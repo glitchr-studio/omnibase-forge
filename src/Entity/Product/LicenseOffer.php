@@ -30,6 +30,10 @@ class LicenseOffer extends Product
     #[ORM\Column(nullable: true)]
     protected ?int $seats = 1;
 
+    /** On how many machines each seat may activate the software. */
+    #[ORM\Column(nullable: true)]
+    protected ?int $machinesPerSeat = 2;
+
     /** A key and downloads, nothing posted: checkout asks for no address. */
     public function isShippable(): bool
     {
@@ -44,6 +48,9 @@ class LicenseOffer extends Product
 
     public function getUpdatesMonths(): ?int { return $this->updatesMonths; }
     public function setUpdatesMonths(?int $updatesMonths): self { $this->updatesMonths = $updatesMonths ?: null; return $this; }
+
+    public function getMachinesPerSeat(): int { return max(1, (int) ($this->machinesPerSeat ?? 2)); }
+    public function setMachinesPerSeat(?int $machines): self { $this->machinesPerSeat = max(1, (int) ($machines ?? 2)); return $this; }
 
     public function getSeats(): int { return max(1, (int) $this->seats); }
     public function setSeats(int $seats): self { $this->seats = max(1, $seats); return $this; }

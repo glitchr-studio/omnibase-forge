@@ -3,6 +3,7 @@
 namespace Tests\Base\Forge\Entity;
 
 use Base\Forge\Entity\License;
+use Base\Forge\Entity\LicenseSeat;
 use Base\Forge\Entity\Release;
 use Base\Forge\Entity\Software;
 use Base\Forge\Enum\LicenseStatus;
@@ -18,17 +19,33 @@ class LicenseTest extends ForgeKernelTestCase
         return new License($software, $this->user());
     }
 
-    public function testOnlyTheHashOfTheKeyIsKept(): void
+    public function testOnlyTheHashOfASeatsKeyIsKept(): void
     {
-        $license = $this->license();
-        self::assertFalse($license->hasKey());
-        self::assertFalse($license->matchesKey('anything'));
+        $seat = new LicenseSeat($this->license(), 'Someone@Example.org ');
+        self::assertSame('someone@example.org', $seat->getEmail(), 'e-mails compared lower-cased');
+        self::assertFalse($seat->hasKey());
+        self::assertFalse($seat->matchesKey('anything'));
 
-        $license->setKey('glk_SECRET');
-        self::assertTrue($license->hasKey());
-        self::assertTrue($license->matchesKey('glk_SECRET'));
-        self::assertFalse($license->matchesKey('glk_SECRET2'));
-        self::assertSame('glk_SECRET', $license->getKeyPrefix(), 'the first 12 characters, to recognise it');
+        $seat->setKey('glk_SECRET');
+        self::assertTrue($seat->hasKey());
+        self::assertTrue($seat->matchesKey('glk_SECRET'));
+        self::assertFalse($seat->matchesKey('glk_SECRET2'));
+        self::assertSame('glk_SECRET', $seat->getKeyPrefix(), 'the first 12 characters, to recognise it');
+    }
+
+    public function testItsSeatsAreCountedAndFoundByEmail(): void
+    {
+        $license = $this->license()->setSeats(2);
+        self::assertSame(2, $license->getSeatsLeft());
+
+        $license->addHolder(new LicenseSeat($license, 'one@example.org'));
+        self::assertSame(1, $license->getSeatsTaken());
+        self::assertSame(1, $license->getSeatsLeft());
+        self::assertNotNull($license->findSeat(' ONE@example.org'));
+        self::assertNull($license->findSeat('two@example.org'));
+
+        $license->setSeats(0);
+        self::assertSame(1, $license->getSeats(), 'never fewer seats than are given');
     }
 
     public function testValidityFollowsStatusAndExpiry(): void

@@ -2,9 +2,11 @@
 
 namespace Base\Forge\Controller\Admin;
 
+use Base\Forge\Entity\Project;
 use Base\Forge\Entity\Quote;
 use Base\Forge\Entity\Release;
 use Base\Forge\Enum\QuoteStatus;
+use Base\Forge\Service\ProjectReviews;
 use Base\Forge\Service\ReleaseSync;
 use Base\Market\Entity\Order;
 use Base\Market\Service\Checkout;
@@ -19,7 +21,8 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 /**
  * The back office's buttons that are not a form: rebuild a release's
- * archive, send a quote, and mark an order paid when its bank transfer
+ * archive, send a quote, ask a client for their review of a delivered
+ * project, and mark an order paid when its bank transfer
  * arrives (the manual gateway leaves it pending; confirming it here is what
  * credits the hours and issues the licences).
  */
@@ -66,6 +69,21 @@ class ActionController extends AbstractController
             ->context(['quote' => $quote]));
 
         $this->addFlash('success', sprintf('%s sent to %s.', $quote->getReference(), $quote->getEmail()));
+
+        return $this->back($request);
+    }
+
+    /** Closes the project - delivered - and asks its client for a review, by e-mail. */
+    #[Route('/project/{id}/review', name: 'forge_admin_project_review', requirements: ['id' => '\d+'])]
+    public function review(Request $request, int $id, ProjectReviews $reviews): RedirectResponse
+    {
+        $project = $this->entityManager->find(Project::class, $id) ?? throw $this->createNotFoundException();
+        try {
+            $reviews->request($project);
+            $this->addFlash('success', sprintf('« %s » est livré : la demande d\'avis est partie à %s.', $project->getName(), $project->getClient()?->getEmail()));
+        } catch (\InvalidArgumentException $e) {
+            $this->addFlash('warning', $e->getMessage());
+        }
 
         return $this->back($request);
     }

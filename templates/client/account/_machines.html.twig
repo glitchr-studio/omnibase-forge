@@ -1,0 +1,25 @@
+{#
+ # The machines a seat's software is activated on - a game, an application
+ # on a computer -, each with its place to free: a new computer, an old one
+ # gone. The software asks again at its next start.
+ #}
+<div class="forge-machines">
+    <p class="forge-meta">{{ '@forge.machine.title'|trans({taken: seat.activations|length, machines: license.machinesPerSeat}) }}</p>
+    {% if seat.activations|length %}
+    <ul>
+        {% for activation in seat.activations %}
+        <li>
+            <i class="fa-solid {{ activation.platform in ['android', 'ios'] ? 'fa-mobile-screen' : 'fa-laptop' }}" aria-hidden="true"></i>
+            <span>{{ activation.name ?: '@forge.machine.unnamed'|trans }}{% if activation.platform %} <small>{{ activation.platform }}{% if activation.version %} · {{ activation.version }}{% endif %}</small>{% endif %}</span>
+            <span class="forge-meta">{{ '@forge.machine.last_seen'|trans({date: activation.lastSeenAt|format_date('medium')}) }}</span>
+            <form method="post" action="{{ path('forge_license_machine_release', {id: license.id, activation: activation.id}) }}" data-confirm="{{ '@forge.machine.release_confirm'|trans }}">
+                <input type="hidden" name="_token" value="{{ csrf_token('forge_license_machines_' ~ license.id) }}">
+                <button type="submit" class="forge-link">{{ '@forge.machine.release'|trans }}</button>
+            </form>
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p class="forge-meta">{{ '@forge.machine.none'|trans }}</p>
+    {% endif %}
+</div>

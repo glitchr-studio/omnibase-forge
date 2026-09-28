@@ -8,6 +8,7 @@ use Base\Forge\Enum\QuoteStatus;
 use Base\Forge\Repository\QuoteRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Base\Forge\Service\CompanyRegistry;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 
@@ -40,6 +41,20 @@ class Quote implements \Stringable
     #[ORM\Column(length: 180)]
     #[Assert\NotBlank, Assert\Email]
     private string $email = '';
+
+    /** The client's company, by its SIREN or SIRET, when they gave one. */
+    #[ORM\Column(length: 14, nullable: true)]
+    private ?string $siret = null;
+
+    /**
+     * What the State's register said of it when the quote was asked
+     * (CompanyRegistry): its name, address, whether it trades - or that the
+     * register did not answer ("status": unavailable).
+     *
+     * @var array<string, mixed>|null
+     */
+    #[ORM\Column(type: 'json', nullable: true)]
+    private ?array $company = null;
 
     #[ORM\Column(length: 128)]
     #[Assert\NotBlank]
@@ -110,6 +125,26 @@ class Quote implements \Stringable
 
     public function getClient(): ?User { return $this->client; }
     public function setClient(?User $client): self { $this->client = $client; return $this; }
+
+    public function getSiret(): ?string { return $this->siret; }
+    public function setSiret(?string $siret): self { $this->siret = $siret ? CompanyRegistry::normalize($siret) : null; return $this; }
+
+    /** @return array<string, mixed>|null */
+    public function getCompany(): ?array { return $this->company; }
+
+    /** Records the register's answer: FOUND with the company, or why not. */
+    public function setCompanyCheck(array $lookup): self
+    {
+        $this->company = ['status' => $lookup['status']] + ($lookup['company']?->toArray() ?? ['checked_at' => (new \DateTimeImmutable())->format(\DATE_ATOM)]);
+
+        return $this;
+    }
+
+    /** For the back office: verified, closed, unknown, unchecked. */
+    public function getCompanyBadge(): ?string
+    {
+        return CompanyRegistry::companyBadge($this->siret, $this->company);
+    }
 
     public function getEmail(): string { return $this->email; }
     public function setEmail(string $email): self { $this->email = $email; return $this; }

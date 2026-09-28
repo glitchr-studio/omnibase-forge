@@ -18,46 +18,74 @@
     <h2><i class="fa-solid fa-key"></i> {{ '@forge.license.new_key'|trans({software: key.license.software.name}) }}</h2>
     <p>{{ '@forge.license.new_key_help'|trans }}</p>
     <pre class="forge-code"><code>{{ key.value }}</code></pre>
-    <pre class="forge-code"><code>composer config http-basic.{{ app.request.host }} {{ app.user.email }} {{ key.value }}</code></pre>
+    <pre class="forge-code"><code>composer config http-basic.{{ app.request.host }} {{ key.license.findSeatOf(app.user).email }} {{ key.value }}</code></pre>
 </section>
 {% endif %}
 
+{#
+ # Each licence once: its state; the seat the user holds, and its key; the
+ # seats, when the licence is theirs to give - an e-mail each.
+ #}
 <section class="forge-section">
     <h2><i class="fa-solid fa-certificate"></i> {{ '@forge.account.licenses'|trans }}</h2>
-    <div class="forge-table-wrap">
-    <table class="forge-table">
-        <thead><tr>
-            <th>{{ '@forge.license.software'|trans }}</th><th>{{ '@forge.license.status'|trans }}</th>
-            <th>{{ '@forge.license.expires'|trans }}</th><th>{{ '@forge.license.updates'|trans }}</th>
-            <th>{{ '@forge.license.key'|trans }}</th><th></th>
-        </tr></thead>
-        <tbody>
-        {% for license in licenses %}
-            <tr>
-                <td><a href="{{ path('forge_software', {slug: license.software.slug}) }}">{{ license.software.name }}</a></td>
-                <td><span class="forge-badge is-{{ license.valid ? 'active' : license.status.value }}">{{ ('@forge.license.statuses.' ~ (license.valid ? 'active' : (license.status.value == 'active' ? 'expired' : license.status.value)))|trans }}</span></td>
-                <td>{{ license.expiresAt ? license.expiresAt|format_date('medium') : '@forge.license.never'|trans }}</td>
-                <td>{{ license.updatesUntil ? license.updatesUntil|format_date('medium') : '@forge.license.all'|trans }}</td>
-                <td>{% if license.hasKey %}<code>{{ license.keyPrefix }}…</code>{% else %}—{% endif %}</td>
-                <td>
-                    {% if license.valid %}
-                    <form method="post" action="{{ path('forge_license_rekey', {id: license.id}) }}" data-confirm="{{ license.hasKey ? '@forge.license.rekey_confirm'|trans }}">
-                        <input type="hidden" name="_token" value="{{ csrf_token('forge_license_' ~ license.id) }}">
-                        <button type="submit" class="forge-link">{{ (license.hasKey ? '@forge.license.rekey' : '@forge.license.generate')|trans }}</button>
-                    </form>
-                    {% endif %}
-                </td>
-            </tr>
-        {% else %}
-            <tr><td colspan="6" class="forge-empty">{{ '@forge.account.no_license'|trans }} <a href="{{ path('forge_downloads') }}">{{ '@forge.downloads.title'|trans }}</a></td></tr>
-        {% endfor %}
-        </tbody>
-    </table>
-    </div>
+    {% for license in licenses %}
+    {% set mine = license.owner and license.owner.id == app.user.id %}
+    {% set seat = license.findSeatOf(app.user) %}
+    <article class="forge-license" id="licence-{{ license.id }}">
+        <header>
+            <h3><a href="{{ path('forge_software', {slug: license.software.slug}) }}">{{ license.software.name }}</a></h3>
+            <span class="forge-badge is-{{ license.valid ? 'active' : license.status.value }}">{{ ('@forge.license.statuses.' ~ (license.valid ? 'active' : (license.status.value == 'active' ? 'expired' : license.status.value)))|trans }}</span>
+            <p class="forge-meta">
+                {{ '@forge.license.expires'|trans }} : {{ license.expiresAt ? license.expiresAt|format_date('medium') : '@forge.license.never'|trans }}
+                · {{ '@forge.license.updates'|trans }} : {{ license.updatesUntil ? license.updatesUntil|format_date('medium') : '@forge.license.all'|trans }}
+                · {{ '@forge.seat.count'|trans({taken: license.seatsTaken, seats: license.seats}) }}
+            </p>
+        </header>
+
+        {% if seat %}
+        <div class="forge-license-mine">
+            <span><i class="fa-solid fa-user-check"></i> {{ '@forge.seat.yours'|trans({email: seat.email}) }}</span>
+            <span>{{ '@forge.license.key'|trans }} : {% if seat.hasKey %}<code>{{ seat.keyPrefix }}…</code>{% else %}—{% endif %}</span>
+            {% if license.valid %}
+            <form method="post" action="{{ path('forge_license_rekey', {id: license.id}) }}" data-confirm="{{ seat.hasKey ? '@forge.license.rekey_confirm'|trans }}">
+                <input type="hidden" name="_token" value="{{ csrf_token('forge_license_' ~ license.id) }}">
+                <button type="submit" class="forge-link">{{ (seat.hasKey ? '@forge.license.rekey' : '@forge.license.generate')|trans }}</button>
+            </form>
+            {% endif %}
+        </div>
+        {% include '@Forge/client/account/_machines.html.twig' with {seat: seat, license: license} %}
+        {% endif %}
+
+        {% if mine %}
+        <ul class="forge-seats">
+            {% for holder in license.holders %}
+            <li>
+                <span>{{ holder.email }}</span>
+                <span class="forge-meta">{{ holder.user ? '@forge.seat.linked'|trans : '@forge.seat.waiting'|trans }}{{ holder.hasKey ? ' · ' ~ '@forge.seat.has_key'|trans }} · {{ '@forge.machine.count'|trans({taken: holder.activations|length, machines: license.machinesPerSeat}) }}</span>
+                <form method="post" action="{{ path('forge_license_seat_take_back', {id: license.id, seat: holder.id}) }}" data-confirm="{{ '@forge.seat.take_back_confirm'|trans({email: holder.email}) }}">
+                    <input type="hidden" name="_token" value="{{ csrf_token('forge_license_seats_' ~ license.id) }}">
+                    <button type="submit" class="forge-link">{{ '@forge.seat.take_back'|trans }}</button>
+                </form>
+            </li>
+            {% endfor %}
+        </ul>
+        {% if license.valid and license.seatsLeft > 0 %}
+        <form class="forge-seat-give" method="post" action="{{ path('forge_license_seat_give', {id: license.id}) }}">
+            <input type="hidden" name="_token" value="{{ csrf_token('forge_license_seats_' ~ license.id) }}">
+            <label for="seat-{{ license.id }}">{{ '@forge.seat.give_label'|trans({left: license.seatsLeft}) }}</label>
+            <input id="seat-{{ license.id }}" type="email" name="email" required placeholder="{{ '@forge.seat.placeholder'|trans }}" autocomplete="off">
+            <button type="submit" class="forge-btn">{{ '@forge.seat.give'|trans }}</button>
+        </form>
+        {% endif %}
+        {% endif %}
+    </article>
+    {% else %}
+    <p class="forge-empty">{{ '@forge.account.no_license'|trans }} <a href="{{ path('forge_downloads') }}">{{ '@forge.downloads.title'|trans }}</a></p>
+    {% endfor %}
 </section>
 
 {% if quotes|length %}
-<section class="forge-section">
+<section class="forge-section" id="devis">
     <h2><i class="fa-solid fa-file-invoice"></i> {{ '@forge.account.quotes'|trans }}</h2>
     <ul class="forge-list">
     {% for quote in quotes|filter(q => q.status.value not in ['requested', 'draft']) %}
@@ -72,7 +100,7 @@
 </section>
 {% endif %}
 
-<section class="forge-section">
+<section class="forge-section" id="heures">
     <h2><i class="fa-solid fa-hourglass-half"></i> {{ '@forge.account.hours'|trans }}</h2>
     <div class="forge-table-wrap">
     <table class="forge-table">

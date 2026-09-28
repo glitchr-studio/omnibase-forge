@@ -2,6 +2,7 @@
 
 namespace Base\Forge\Model;
 
+use Base\Forge\Validator\CompanyNumber;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
@@ -20,6 +21,10 @@ final class QuoteRequest
 
     #[Assert\NotBlank, Assert\Length(max: 180)]
     public string $title = '';
+
+    /** A company's SIREN or SIRET - checked against the State's register -, for a business. */
+    #[CompanyNumber]
+    public ?string $siret = null;
 
     #[Assert\NotBlank, Assert\Length(min: 30, max: 6000)]
     public string $request = '';

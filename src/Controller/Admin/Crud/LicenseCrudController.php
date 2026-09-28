@@ -14,7 +14,9 @@ use Symfony\Component\Form\Extension\Core\Type\EnumType;
 
 /**
  * Licences: issued when an offer is paid; granted by hand here (a gift, a
- * partner). The key is never shown - its owner generates it from their account.
+ * partner, a client's team) - then give its seats, an e-mail each, under
+ * "Postes". Keys are never shown: each seat's holder makes theirs from
+ * their account.
  */
 class LicenseCrudController extends AbstractCrudController
 {
@@ -36,8 +38,9 @@ class LicenseCrudController extends AbstractCrudController
         yield TextField::new('status')->setColumns(2)
             ->setFormType(EnumType::class)->setFormTypeOptions(['class' => LicenseStatus::class])
             ->formatValue(fn ($value) => $value instanceof LicenseStatus ? $value->value : $value);
-        yield IntegerField::new('seats')->setColumns(2);
-        yield TextField::new('keyPrefix', 'Key')->onlyOnIndex();
+        yield IntegerField::new('seats')->setColumns(2)->setHelp('How many e-mails may use it');
+        yield IntegerField::new('machinesPerSeat', 'Machines per seat')->setColumns(2)->hideOnIndex()->setHelp('On how many computers each may activate it');
+        yield TextField::new('seatsTaken', 'Given')->onlyOnIndex();
         yield DateTimeField::new('expiresAt')->setColumns(4);
         yield DateTimeField::new('updatesUntil')->setColumns(4)->hideOnIndex();
         yield TextField::new('orderReference')->setColumns(4)->hideOnIndex();

@@ -32,6 +32,7 @@ return function (ContainerConfigurator $configurator) {
             $src.'/Entity/',
             $src.'/Enum/',
             $src.'/Model/',
+            $src.'/Exception/',
             $src.'/Controller/Admin/',
             $src.'/ForgeBundle.php',
         ]);

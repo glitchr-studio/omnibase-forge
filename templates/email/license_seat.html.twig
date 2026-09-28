@@ -1,0 +1,11 @@
+{% extends 'email.html.twig' %}
+
+{% block subject %}Votre accès à {{ software.name }}{% endblock %}
+{% block action_url %}{{ url('forge_software', {slug: software.slug}) }}{% endblock %}
+{% block action_text %}Télécharger {{ software.name }}{% endblock %}
+
+{% block content %}
+<p>Bonjour,</p>
+<p>{% if by %}{{ by.email }} vous a donné{% else %}Vous avez reçu{% endif %} un accès à <strong>{{ software.name }}</strong>{% if license.expiresAt %}, valable jusqu'au {{ license.expiresAt|format_date('long', locale: 'fr') }}{% endif %}.</p>
+<p>Connectez-vous avec cette adresse, {{ seat.email }} - ou créez votre compte avec elle -, puis téléchargez depuis la page du logiciel. Dans votre espace « Mes licences », vous pouvez aussi générer votre clé pour l'installer avec Composer.</p>
+{% endblock %}

@@ -1,0 +1,44 @@
+{% extends '@Forge/client/layout.html.twig' %}
+
+{% block forge_title %}{{ '@forge.review.title'|trans({project: project.name}) }}{% endblock %}
+{% block forge_lead %}{{ '@forge.review.lead'|trans }}{% endblock %}
+{% block forge_class %}forge-review{% endblock %}
+
+{#
+ # The client's review of their delivered project: the project, closed, and
+ # the stars - or, once given, their review and thanks.
+ #}
+{% block forge_body %}
+<section class="forge-review-project">
+    <h2>{{ project.name }}</h2>
+    <p>
+        <span class="forge-badge is-done"><i class="fa-solid fa-circle-check" aria-hidden="true"></i> {{ '@forge.review.delivered'|trans }}</span>
+        <span class="forge-badge"><i class="fa-solid fa-lock" aria-hidden="true"></i> {{ '@forge.review.closed'|trans }}</span>
+    </p>
+    {% if project.summary %}<p class="forge-meta">{{ project.summary }}</p>{% endif %}
+</section>
+
+{% if review.submitted %}
+<section class="forge-review-done" role="status">
+    <p class="forge-stars" aria-label="{{ '@forge.review.stars'|trans({rating: review.rating}) }}">{% for i in 1..5 %}<span{{ i <= review.rating ? ' class="is-on"' }} aria-hidden="true">★</span>{% endfor %}</p>
+    {% if review.comment %}<blockquote>{{ review.comment|nl2br }}</blockquote>{% endif %}
+    <p>{{ '@forge.review.thanks'|trans }}</p>
+</section>
+{% else %}
+<section class="forge-form-card">
+    {{ form_start(form, {attr: {novalidate: 'novalidate', class: 'ga-form forge-form forge-review-form'}}) }}
+        <fieldset class="forge-stars-input">
+            <legend>{{ '@forge.review.rating'|trans }}</legend>
+            {% for choice in form.rating|reverse %}
+                {{ form_widget(choice, {attr: {class: 'forge-star-radio'}}) }}
+                <label for="{{ choice.vars.id }}" title="{{ '@forge.review.stars'|trans({rating: choice.vars.value}) }}"><span class="forge-sr">{{ '@forge.review.stars'|trans({rating: choice.vars.value}) }}</span>★</label>
+            {% endfor %}
+            {{ form_errors(form.rating) }}
+        </fieldset>
+        {{ form_row(form.comment) }}
+        {{ form_row(form.signature) }}
+        <button type="submit" class="forge-btn forge-btn-primary"><span>{{ '@forge.review.send'|trans }}</span></button>
+    {{ form_end(form) }}
+</section>
+{% endif %}
+{% endblock %}

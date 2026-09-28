@@ -52,6 +52,8 @@ class QuoteCrudController extends AbstractCrudController
         yield TextField::new('contactName')->setColumns(4);
         yield EmailField::new('email')->setColumns(4);
         yield AssociationField::new('client')->setColumns(4)->hideOnIndex();
+        yield TextField::new('siret', 'SIRET')->setColumns(4)->hideOnIndex();
+        yield TextField::new('companyBadge', 'Entreprise (registre)')->setColumns(8)->setDisabled()->hideOnForm();
         yield TextField::new('status')->setColumns(3)
             ->setFormType(EnumType::class)->setFormTypeOptions(['class' => QuoteStatus::class])
             ->formatValue(fn ($value) => $value instanceof QuoteStatus ? $value->value : $value);

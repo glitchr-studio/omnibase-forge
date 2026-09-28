@@ -1,0 +1,11 @@
+{% extends 'email.html.twig' %}
+
+{% block subject %}Votre avis sur « {{ project.name }} »{% endblock %}
+{% block action_url %}{{ url('forge_review', {token: review.token}) }}{% endblock %}
+{% block action_text %}Donner mon avis{% endblock %}
+
+{% block content %}
+<p>Bonjour{% if project.client.username is defined %} {{ project.client.username }}{% endif %},</p>
+<p>« {{ project.name }} » est livré : merci de nous avoir fait confiance.</p>
+<p>Qu'en pensez-vous ? Une note de une à cinq étoiles et quelques mots, une minute tout au plus. Votre avis nous aide à progresser, et - si vous l'acceptez - à montrer notre travail.</p>
+{% endblock %}

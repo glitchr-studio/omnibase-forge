@@ -11,9 +11,9 @@ use Symfony\Component\Routing\Attribute\Route;
 
 /**
  * The Composer repository's single document. Anonymous: the free packages.
- * With HTTP Basic credentials (e-mail + licence key, what `composer config
- * http-basic.<host>` stores): the licensed packages their licences cover
- * too. Wrong credentials are a 401, so Composer asks again rather than
+ * With HTTP Basic credentials (the e-mail of a licence seat + its key, what
+ * `composer config http-basic.<host>` stores): the licensed packages the
+ * licences with a seat for that e-mail cover too. Wrong credentials are a 401, so Composer asks again rather than
  * silently resolving without them.
  */
 class ComposerController extends AbstractController
@@ -30,8 +30,8 @@ class ComposerController extends AbstractController
         $licenses = [];
 
         if (null !== $email || null !== $key) {
-            [$owner, $licenses] = $this->index->authenticate($email, $key);
-            if (!$owner) {
+            [$holder, $licenses] = $this->index->authenticate($email, $key);
+            if (!$holder) {
                 return new JsonResponse(['error' => 'Invalid e-mail or licence key.'], Response::HTTP_UNAUTHORIZED, [
                     'WWW-Authenticate' => 'Basic realm="Glitchr packages"',
                 ]);

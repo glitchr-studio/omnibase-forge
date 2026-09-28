@@ -37,7 +37,7 @@
 {% endfor %}
 </div>
 
-<section class="forge-band">
+<section class="forge-band" id="composer">
     <p>{{ '@forge.composer.lead'|trans }}</p>
     <pre class="forge-code"><code>composer config repositories.glitchr composer {{ app.request.schemeAndHttpHost }}/composer
 composer config http-basic.{{ app.request.host }} &lt;e-mail&gt; &lt;{{ '@forge.composer.key'|trans }}&gt;</code></pre>

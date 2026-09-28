@@ -8,6 +8,7 @@ use Base\Forge\Entity\Quote;
 use Base\Forge\Enum\QuoteStatus;
 use Base\Forge\Form\QuoteRequestType;
 use Base\Forge\Model\QuoteRequest;
+use Base\Forge\Service\CompanyRegistry;
 use Base\Forge\Repository\QuoteRepository;
 use Base\Forge\Service\HourLedger;
 use Base\Forge\Service\QuoteStatusGuard;
@@ -64,6 +65,7 @@ class ShopController extends AbstractController
     public function request(
         Request $request,
         MailerInterface $mailer,
+        CompanyRegistry $registry,
         #[Autowire('%forge.contact_email%')] ?string $contact = null,
     ): Response {
         $data = new QuoteRequest();
@@ -83,6 +85,10 @@ class ShopController extends AbstractController
             $quote->setEmail($data->email);
             $quote->setTitle($data->title);
             $quote->setRequest($data->request);
+            // A business: its SIRET, and what the State's register says of it.
+            if ($data->siret) {
+                $quote->setSiret($data->siret)->setCompanyCheck($registry->lookup($data->siret));
+            }
             $quote->setStatus(QuoteStatus::REQUESTED);
             $this->entityManager->persist($quote);
             $this->entityManager->flush();

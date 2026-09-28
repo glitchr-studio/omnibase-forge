@@ -118,7 +118,8 @@ class DownloadController extends AbstractController
         $ip = $request->getClientIp();
         $this->entityManager->persist(new Download(
             $artifact,
-            $user instanceof User ? $user : $license?->getOwner(),
+            // Composer's downloads come with no session: whose seat it was is not known.
+            $user instanceof User ? $user : null,
             $license,
             $ip ? hash('sha256', $ip.$this->getParameter('kernel.secret')) : null,
             'composer' === $request->query->get('channel') ? 'composer' : 'web',
@@ -150,7 +151,7 @@ class DownloadController extends AbstractController
         return $software;
     }
 
-    /** @return array<int, list<License>> the signed-in user's valid licences, by software id */
+    /** @return array<int, list<License>> the valid licences a seat of which the signed-in user holds, by software id */
     private function licensesBySoftware(): array
     {
         $user = $this->getUser();
@@ -159,7 +160,7 @@ class DownloadController extends AbstractController
         }
 
         $bySoftware = [];
-        foreach ($this->licenses->findOwnedBy($user) as $license) {
+        foreach ($this->licenses->findHeldBy($user) as $license) {
             if ($license->isValid()) {
                 $bySoftware[(int) $license->getSoftware()?->getId()][] = $license;
             }

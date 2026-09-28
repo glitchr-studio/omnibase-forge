@@ -4,6 +4,7 @@ namespace Base\Forge\Security\Voter;
 
 use Base\Entity\User;
 use Base\Forge\Entity\Project;
+use Base\Forge\Enum\ProjectStatus;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authorization\Voter\Vote;
@@ -11,7 +12,7 @@ use Symfony\Component\Security\Core\Authorization\Voter\Voter;
 
 /**
  * A project is its client's, and the studio's: the client sees it and moves
- * its cards; staff see every project.
+ * its cards - until it is delivered (closed); staff see and move every one.
  *
  * @extends Voter<string, Project>
  */
@@ -36,6 +37,14 @@ final class ProjectVoter extends Voter
             return false;
         }
 
-        return $this->security->isGranted('ROLE_STAFF') || $subject->getClient()?->getId() === $user->getId();
+        if ($this->security->isGranted('ROLE_STAFF')) {
+            return true;
+        }
+        if ($subject->getClient()?->getId() !== $user->getId()) {
+            return false;
+        }
+
+        // A delivered project is closed: its client still sees it, its board no longer moves.
+        return self::VIEW === $attribute || ProjectStatus::DONE !== $subject->getStatus();
     }
 }

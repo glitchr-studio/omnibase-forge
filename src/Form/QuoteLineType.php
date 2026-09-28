@@ -18,12 +18,16 @@ class QuoteLineType extends AbstractType
     {
     }
 
+    /**
+     * The texts name their domain (@forge.…): base-bundle gives every field the "fields" domain,
+     * which the form's own translation_domain does not reach.
+     */
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
-            ->add('label', TextType::class, ['label' => 'quote.line.label'])
-            ->add('hours', NumberType::class, ['label' => 'quote.line.hours', 'scale' => 2, 'html5' => true, 'attr' => ['step' => '0.25', 'min' => 0]])
-            ->add('hourlyRate', IntegerType::class, ['label' => 'quote.line.rate', 'empty_data' => (string) $this->hourlyRate, 'help' => 'quote.line.rate_help']);
+            ->add('label', TextType::class, ['label' => '@forge.quote.line.label'])
+            ->add('hours', NumberType::class, ['label' => '@forge.quote.line.hours', 'scale' => 2, 'html5' => true, 'attr' => ['step' => '0.25', 'min' => 0]])
+            ->add('hourlyRate', IntegerType::class, ['label' => '@forge.quote.line.rate', 'empty_data' => (string) $this->hourlyRate, 'help' => '@forge.quote.line.rate_help']);
     }
 
     public function configureOptions(OptionsResolver $resolver): void

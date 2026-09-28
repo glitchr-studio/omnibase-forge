@@ -25,7 +25,7 @@
         <tr><td colspan="3">{{ '@forge.quote.subtotal'|trans }}</td><td class="num">{{ quote.subtotal|forge_money(quote.currency) }}</td></tr>
         <tr><td colspan="3">{{ '@forge.quote.discount'|trans({percent: quote.discountPercent}) }}</td><td class="num">-{{ quote.discountAmount|forge_money(quote.currency) }}</td></tr>
         {% endif %}
-        <tr class="forge-total"><td>{{ '@forge.quote.total'|trans }}</td><td class="num">{{ quote.totalMinutes|forge_hours }}</td><td></td><td class="num">{{ quote.total|forge_money(quote.currency) }}</td></tr>
+        <tr class="forge-total"><td>{{ '@forge.quote.total'|trans }}</td><td class="num">{{ quote.totalMinutes|forge_hours }}</td><td></td><td class="num">{{ quote.total|forge_price(quote.currency) }}</td></tr>
     </tfoot>
 </table>
 </div>

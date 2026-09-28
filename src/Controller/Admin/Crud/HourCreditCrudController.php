@@ -11,10 +11,11 @@ use Base\Field\IdField;
 use Base\Field\IntegerField;
 use Base\Field\TextField;
 use Base\Forge\Entity\HourCredit;
+use Base\Forge\Enum\CreditReason;
 
 /**
  * The support-hour ledgers, read-only: lines come from paid orders and
- * logged time. A manual correction is an adjustment line from the
+ * logged time; a purchase has a "Rembourser" action. A manual correction is an adjustment line from the
  * forge_admin_hours_adjust action (to keep the history honest).
  */
 class HourCreditCrudController extends AbstractCrudController
@@ -31,7 +32,13 @@ class HourCreditCrudController extends AbstractCrudController
 
     public function configureActions(Actions $actions): Actions
     {
-        return parent::configureActions($actions)->disable(Action::NEW, Action::EDIT, Action::DELETE);
+        // A purchase can be paid back, with an explanation (RefundController).
+        $refund = Action::new('forgeRefund', 'Rembourser', 'fa-solid fa-rotate-left')
+            ->linkToRoute('forge_admin_order_refund', fn (HourCredit $credit) => ['reference' => $credit->getOrderReference()])
+            ->displayIf(fn (HourCredit $credit) => CreditReason::PURCHASE === $credit->getReason() && null !== $credit->getOrderReference());
+
+        return parent::configureActions($actions)->disable(Action::NEW, Action::EDIT, Action::DELETE)
+            ->add(Action::INDEX, $refund)->add(Action::DETAIL, $refund);
     }
 
     public function configureFields(string $pageName): iterable

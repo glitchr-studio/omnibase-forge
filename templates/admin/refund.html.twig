@@ -1,0 +1,71 @@
+{% extends '@Admin/layout.html.twig' %}
+
+{% block page_title %}Rembourser {{ order.reference }}{% endblock %}
+
+{% block content_header %}
+<div class="admin-header">
+    <span class="admin-header-icon"><i class="fa-solid fa-rotate-left"></i></span>
+    <div class="admin-header-titles">
+        <h1>Rembourser {{ order.reference }}</h1>
+        <div class="admin-header-subtitle">Des heures achetées, rendues au client avec une explication - quand le travail ne s'accorde pas avec ses valeurs, ou les nôtres.</div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<style>
+    .forge-refund { display: grid; gap: 1rem; max-width: 46rem; }
+    .forge-refund dl { display: grid; grid-template-columns: max-content 1fr; gap: .35rem 1.25rem; margin: 0; }
+    .forge-refund dt { opacity: .7; }
+    .forge-refund dd { margin: 0; font-weight: 600; }
+    .forge-refund form { display: grid; gap: .9rem; }
+    .forge-refund .forge-refund-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .forge-refund label { display: grid; gap: .3rem; }
+    .forge-refund small { opacity: .7; }
+    @media (max-width: 640px) { .forge-refund .forge-refund-row { grid-template-columns: 1fr; } }
+</style>
+<div class="forge-refund">
+    <div class="card" style="padding: 1rem 1.25rem;">
+        <dl>
+            <dt>Client</dt><dd>{{ order.customer ?? '—' }}{% if order.customer %} · {{ order.customer.email }}{% endif %}</dd>
+            <dt>Payé</dt><dd>{{ summary.paid|forge_money(summary.currency) }}{% if order.paidAt %} · le {{ order.paidAt|date('d/m/Y') }}{% endif %} · {{ summary.stripe ? 'par carte (Stripe)' : 'par virement' }}</dd>
+            <dt>Heures achetées</dt><dd>{{ summary.minutes|forge_hours }}</dd>
+            <dt>Encore inutilisées</dt><dd>{{ summary.unused|forge_hours }}</dd>
+            {% if summary.refunded > 0 %}<dt>Déjà remboursé</dt><dd>{{ summary.refunded|forge_money(summary.currency) }} · {{ summary.refunded_minutes|forge_hours }}</dd>{% endif %}
+            <dt>Remboursable</dt><dd>{{ summary.refundable|forge_money(summary.currency) }}</dd>
+        </dl>
+    </div>
+
+    {% if summary.refundable > 0 %}
+    <form method="post" class="card" style="padding: 1rem 1.25rem;"
+          data-confirm="Rembourser ce montant et prévenir le client ? {{ summary.stripe ? 'Stripe rembourse la carte aussitôt.' : 'Le virement reste à faire à la main.' }}">
+        <input type="hidden" name="_token" value="{{ csrf_token('forge_order_refund_' ~ order.reference) }}">
+        <div class="forge-refund-row">
+            <label>Montant ({{ summary.currency }})
+                <input class="form-control" name="amount" value="{{ values.amount }}" inputmode="decimal" required>
+                <small>Proposé : la part des heures inutilisées.</small>
+            </label>
+            <label>Minutes reprises sur son solde
+                <input class="form-control" type="number" name="minutes" min="0" max="{{ summary.minutes - summary.refunded_minutes }}" value="{{ values.minutes }}" required>
+                <small>{{ summary.unused }} min inutilisées.</small>
+            </label>
+        </div>
+        <label>L'explication, envoyée au client telle quelle
+            <textarea class="form-control" name="reason" rows="6" required placeholder="Ce que nous avons compris de votre projet, pourquoi nous préférons ne pas le poursuivre…">{{ values.reason }}</textarea>
+        </label>
+        <div><button class="btn btn-primary" type="submit"><i class="fa-solid fa-rotate-left"></i> Rembourser et prévenir le client</button></div>
+    </form>
+    {% endif %}
+
+    {% if history is not empty %}
+    <div class="card" style="padding: 1rem 1.25rem;">
+        <strong>Remboursements</strong>
+        <ul>
+        {% for refund in history %}
+            <li>{{ refund.createdAt|date('d/m/Y') }} · {{ refund.amount|forge_money(refund.currency) }} · {{ refund.minutes|forge_hours }} · {{ refund.byTransfer ? 'virement à faire' : refund.stripeRefund }}{% if refund.refundedBy %} · {{ refund.refundedBy }}{% endif %}<br><small>{{ refund.reason }}</small></li>
+        {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

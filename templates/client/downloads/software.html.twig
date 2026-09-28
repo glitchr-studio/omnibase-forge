@@ -43,6 +43,18 @@
     </div>
 
     <aside class="forge-side">
+        {# Its family: the head it belongs to, and the others under it. #}
+        {% set head = software.isHead() ? software : software.getParent() %}
+        {% set family = head.getVisibleChildren()|filter(c => c != software) %}
+        {% if not software.isHead() or family|length %}
+        <nav class="forge-family" aria-label="{{ '@forge.software.family'|trans }}">
+            {% if not software.isHead() %}<p>{{ '@forge.software.family_of'|trans({name: ''}) }}<a href="{{ path('forge_software', {slug: head.slug}) }}">{{ head.name }}</a></p>{% endif %}
+            {% if family|length %}
+            <h2>{{ '@forge.software.family'|trans }}</h2>
+            <ul>{% for member in family %}<li><a href="{{ path('forge_software', {slug: member.slug}) }}">{{ member.name }}</a>{% if member.tagline %} <span class="forge-meta">{{ member.tagline }}</span>{% endif %}</li>{% endfor %}</ul>
+            {% endif %}
+        </nav>
+        {% endif %}
         {% if software.free %}
             <p class="forge-badge is-free">{{ '@forge.pricing.free'|trans }}</p>
             <p>{{ '@forge.software.free_text'|trans }}</p>
@@ -54,7 +66,7 @@
             {% for offer in offers %}
             <div class="forge-offer">
                 <strong>{{ offer.title }}</strong>
-                <span class="forge-price">{{ offer.unitPrice|forge_money(offer.currency) }}</span>
+                <span class="forge-price">{{ offer.unitPrice|forge_price(offer.currency) }}</span>
                 <p class="forge-meta">
                     {{ '@forge.offer.seats'|trans({count: offer.seats}) }} ·
                     {{ offer.durationMonths ? '@forge.offer.duration'|trans({months: offer.durationMonths}) : '@forge.offer.perpetual'|trans }} ·

@@ -2,6 +2,8 @@
 
 namespace Base\Forge\Controller\Admin\Crud;
 
+use Base\Admin\Config\Action;
+use Base\Admin\Config\Actions;
 use Base\Admin\Controller\AbstractCrudController;
 use Base\Field\AssociationField;
 use Base\Field\DateField;
@@ -23,6 +25,16 @@ class ProjectCrudController extends AbstractCrudController
     public static function getPreferredIcon(): ?string
     {
         return 'fa-solid fa-diagram-project';
+    }
+
+    public function configureActions(Actions $actions): Actions
+    {
+        // Delivered: the project closes and its client is asked for a review.
+        $review = Action::new('forgeReview', 'Demander un avis', 'fa-solid fa-star')
+            ->linkToRoute('forge_admin_project_review', fn (Project $project) => ['id' => $project->getId()])
+            ->displayIf(fn (Project $project) => null !== $project->getClient());
+
+        return parent::configureActions($actions)->add(Action::INDEX, $review)->add(Action::DETAIL, $review);
     }
 
     public function configureFields(string $pageName): iterable

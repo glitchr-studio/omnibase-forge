@@ -13,15 +13,25 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 /** What a visitor fills in to ask for a quote: who, what, in their words. */
 class QuoteRequestType extends AbstractType
 {
+    /**
+     * The texts name their domain (@forge.…): base-bundle gives every field the "fields" domain,
+     * which the form's own translation_domain does not reach.
+     */
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
-            ->add('contactName', TextType::class, ['label' => 'quote.form.name'])
-            ->add('email', EmailType::class, ['label' => 'quote.form.email'])
-            ->add('title', TextType::class, ['label' => 'quote.form.title', 'attr' => ['placeholder' => 'quote.form.title_placeholder']])
+            ->add('contactName', TextType::class, ['label' => '@forge.quote.form.name'])
+            ->add('email', EmailType::class, ['label' => '@forge.quote.form.email'])
+            ->add('siret', TextType::class, [
+                'label' => '@forge.company.siret',
+                'required' => false,
+                'help' => '@forge.company.siret_help',
+                'attr' => ['inputmode' => 'numeric', 'autocomplete' => 'off', 'data-controller' => 'siret', 'data-action' => 'siret#check', 'data-siret-url-value' => '/api/company/'],
+            ])
+            ->add('title', TextType::class, ['label' => '@forge.quote.form.title', 'attr' => ['placeholder' => '@forge.quote.form.title_placeholder']])
             ->add('request', TextareaType::class, [
-                'label' => 'quote.form.request',
-                'help' => 'quote.form.request_help',
+                'label' => '@forge.quote.form.request',
+                'help' => '@forge.quote.form.request_help',
                 'attr' => ['rows' => 7],
             ]);
     }

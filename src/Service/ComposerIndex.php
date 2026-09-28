@@ -2,7 +2,6 @@
 
 namespace Base\Forge\Service;
 
-use Base\Entity\User;
 use Base\Forge\Entity\License;
 use Base\Forge\Entity\Release;
 use Base\Forge\Entity\Software;
@@ -70,23 +69,25 @@ class ComposerIndex
         return ['packages' => $packages];
     }
 
-    /** The user behind a Basic auth pair (e-mail, licence key), and their valid licences. */
+    /**
+     * Who is behind a Basic auth pair (e-mail, key): the seat that key was
+     * made for, given to that e-mail, on a valid licence - and then every
+     * valid licence with a seat for that e-mail.
+     *
+     * @return array{0: ?string, 1: list<License>} the e-mail, or null when the pair is wrong
+     */
     public function authenticate(?string $email, ?string $key): array
     {
         if (!$email || !$key || !LicenseKey::looksValid($key)) {
             return [null, []];
         }
 
-        $license = $this->licenses->findOneByKey($key);
-        if (!$license || !$license->isValid() || 0 !== strcasecmp((string) $license->getOwner()?->getEmail(), $email)) {
+        $seat = $this->licenses->findSeatByKey($key);
+        if (!$seat || !$seat->getLicense()?->isValid() || 0 !== strcasecmp($seat->getEmail(), trim($email))) {
             return [null, []];
         }
 
-        /** @var User $owner */
-        $owner = $license->getOwner();
-        $valid = array_filter($this->licenses->findOwnedBy($owner), fn (License $l) => $l->isValid());
-
-        return [$owner, array_values($valid)];
+        return [$seat->getEmail(), $this->licenses->findValidByEmail($seat->getEmail())];
     }
 
     /** @param list<License> $licenses */

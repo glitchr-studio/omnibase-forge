@@ -1,0 +1,18 @@
+{% extends 'email.html.twig' %}
+
+{% block subject %}Remboursement de votre commande {{ refund.orderReference }}{% endblock %}
+{% block action_url %}{{ url('forge_account_licenses') }}{% endblock %}
+{% block action_text %}Voir mon compte{% endblock %}
+
+{% block content %}
+<p>Bonjour {{ user }},</p>
+<p>Nous vous remboursons <strong>{{ refund.amount|forge_money(refund.currency) }}</strong> sur votre commande {{ refund.orderReference }}{% if refund.minutes > 0 %}, pour {{ refund.minutes|forge_hours }} de support qui ne seront pas utilisées{% endif %}.</p>
+<p>Pourquoi :</p>
+<blockquote style="margin: 0 0 1em; padding: .5em 1em; border-left: 3px solid #e8736f;">{{ refund.reason|nl2br }}</blockquote>
+{% if refund.byTransfer %}
+<p>Le remboursement vous parvient par virement, sous quelques jours ; répondez à ce message si nous n'avons pas vos coordonnées bancaires.</p>
+{% else %}
+<p>Le remboursement est fait sur la carte utilisée pour le paiement ; selon votre banque, il apparaît sous 5 à 10 jours.</p>
+{% endif %}
+<p>Merci de la confiance que vous nous avez accordée.</p>
+{% endblock %}

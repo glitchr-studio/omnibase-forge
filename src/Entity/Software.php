@@ -3,6 +3,7 @@
 namespace Base\Forge\Entity;
 
 use Base\Database\Attribute\DiscriminatorEntry;
+use Base\Database\Attribute\Uploader;
 use Base\Entity\Thread;
 use Base\Entity\User;
 use Base\Enum\ThreadState;
@@ -79,9 +80,15 @@ class Software extends Thread implements LinkableInterface
     #[Assert\Regex('/^[a-z0-9]([_.-]?[a-z0-9]+)*\/[a-z0-9](([_.]|-{1,2})?[a-z0-9]+)*$/')]
     protected ?string $packageName = null;
 
-    /** A path under the public assets, or an absolute URL, for the card. */
+    /**
+     * The card's picture: an upload (the back office, or the screenshot
+     * command), stored by base-bundle's Uploader as a uuid - or, left as they
+     * were (missable), a path under the public assets or an absolute URL.
+     * Untyped: the form hands the setter an UploadedFile.
+     */
     #[ORM\Column(length: 255, nullable: true)]
-    protected ?string $image = null;
+    #[Uploader(max_size: '8MB', mime_types: ['image/*'], missable: true)]
+    protected $image = null;
 
     /** The live application, shown in a nested panel from the card. */
     #[ORM\Column(length: 255, nullable: true)]
@@ -103,11 +110,43 @@ class Software extends Thread implements LinkableInterface
     #[ORM\OneToMany(targetEntity: LicenseOffer::class, mappedBy: 'software')]
     protected Collection $offers;
 
+
     public function __construct(?User $owner = null, ?string $title = null, ?string $slug = null)
     {
         parent::__construct($owner, null, $title, $slug);
         $this->releases = new ArrayCollection();
         $this->offers = new ArrayCollection();
+    }
+
+    /**
+     * Its family (Thread's parent): base-bundle-admin, -market,
+     * base-plugin... under base-bundle. The pages list a family under its
+     * head, not side by side with it. Never its own ancestor.
+     */
+    public function setParent(?Thread $parent): self
+    {
+        for ($ancestor = $parent; $ancestor; $ancestor = $ancestor->getParent()) {
+            if ($ancestor === $this) {
+                throw new \InvalidArgumentException(sprintf('%s cannot be filed under %s: it would be its own ancestor.', $this->getName(), $parent->getTitle()));
+            }
+        }
+        parent::setParent($parent);
+
+        return $this;
+    }
+
+    /** @return list<Software> its published children, for the public pages */
+    public function getVisibleChildren(): array
+    {
+        return array_values($this->getChildren()->filter(fn ($child) => $child instanceof self && ThreadState::PUBLISH === $child->getState())->toArray());
+    }
+
+    /** Listed on its own: no parent, or one that is not published. */
+    public function isHead(): bool
+    {
+        $parent = $this->getParent();
+
+        return !$parent instanceof self || ThreadState::PUBLISH !== $parent->getState();
     }
 
     /** The title, as the templates and the admin call it. */
@@ -179,8 +218,10 @@ class Software extends Thread implements LinkableInterface
     public function getPackageName(): ?string { return $this->packageName; }
     public function setPackageName(?string $packageName): self { $this->packageName = $packageName; return $this; }
 
-    public function getImage(): ?string { return $this->image; }
-    public function setImage(?string $image): self { $this->image = $image; return $this; }
+    /** The picture's public path (an upload), or the stored path or URL as it is. */
+    public function getImage(): ?string { return Uploader::getPublic($this, 'image'); }
+    public function getImageFile() { return Uploader::get($this, 'image'); }
+    public function setImage($image): self { $this->image = $image; return $this; }
 
     public function getDemoUrl(): ?string { return $this->demoUrl; }
     public function setDemoUrl(?string $demoUrl): self { $this->demoUrl = $demoUrl; return $this; }

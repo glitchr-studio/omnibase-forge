@@ -3,7 +3,9 @@
 namespace Base\Forge\Controller\Admin\Crud;
 
 use Base\Admin\Controller\AbstractCrudController;
+use Base\Field\AssociationField;
 use Base\Field\IdField;
+use Base\Field\ImageField;
 use Base\Field\IntegerField;
 use Base\Field\SlugField;
 use Base\Field\StateField;
@@ -50,13 +52,14 @@ class SoftwareCrudController extends AbstractCrudController
         yield TextField::new('year')->setColumns(3)->hideOnIndex();
         yield WysiwygField::new('content', 'Description')->hideOnIndex();
         yield TextField::new('stackAsText', 'Stack')->setColumns(6)->hideOnIndex()->setHelp('Comma separated: Symfony, TransparentJS, Stripe');
-        yield TextField::new('image')->setColumns(6)->hideOnIndex()->setHelp('images/brand/… (public assets) or an absolute URL');
+        yield ImageField::new('image')->setColumns(6)->hideOnIndex()->setRequired(false)->setHelp('The card\'s picture (an older path under the public assets, or a URL, still shows)');
         yield TextField::new('homepage')->setColumns(4)->hideOnIndex();
         yield TextField::new('sourceUrl')->setColumns(4)->hideOnIndex();
         yield TextField::new('demoUrl')->setColumns(4)->hideOnIndex()->setHelp('Opened in a nested panel from the applications page');
         yield TextField::new('gitRepository', 'Git repository')->setColumns(4)->setHelp('The git-bundle repository name (releases are built from its tags)');
         yield TextField::new('repositoryUrl')->setColumns(4)->hideOnIndex()->setHelp('Cloned into forge.repositories_dir when not in git.repositories');
         yield TextField::new('packageName')->setColumns(4)->hideOnIndex()->setHelp('vendor/name, to serve it from the Composer repository');
+        yield AssociationField::new('parent', 'Famille')->setClass(Software::class)->setColumns(3)->setRequired(false)->setHelp('Listed under it on the site (base-bundle-admin under base-bundle)');
         yield IntegerField::new('position')->setColumns(3);
     }
 }
