@@ -66,7 +66,7 @@
             {% for offer in offers %}
             <div class="forge-offer">
                 <strong>{{ offer.title }}</strong>
-                <span class="forge-price">{{ offer.unitPrice|forge_price(offer.currency) }}</span>
+                <span class="forge-price">{% include '@Forge/client/_price.html.twig' with {product: offer} %}</span>
                 <p class="forge-meta">
                     {{ '@forge.offer.seats'|trans({count: offer.seats}) }} ·
                     {{ offer.durationMonths ? '@forge.offer.duration'|trans({months: offer.durationMonths}) : '@forge.offer.perpetual'|trans }} ·

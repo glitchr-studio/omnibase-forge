@@ -1,0 +1,14 @@
+{#
+ # A product's price as a buyer reads it: with its VAT when it has one
+ # (base-bundle-market's rate for it: market_vat_rate()), the price without
+ # it beside, and what it comes to in the visitor's currency (forge_price).
+ # Without VAT, the price alone. The order charges the same, less the VAT an
+ # exemption lifts (reverse charge, a store without VAT). Variables: product.
+ #}
+{% set rate = market_vat_rate(product) %}
+{% if rate > 0 %}
+<span class="forge-price-ttc">{{ market_price_with_vat(product)|forge_price(product.currency) }} <small>{{ '@forge.price.with_vat'|trans }}</small></span>
+<small class="forge-price-ht">{{ product.unitPrice|forge_money(product.currency) }} {{ '@forge.price.without_vat'|trans }}</small>
+{% else %}
+{{ product.unitPrice|forge_price(product.currency) }}
+{% endif %}

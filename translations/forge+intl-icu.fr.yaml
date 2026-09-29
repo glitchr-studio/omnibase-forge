@@ -39,7 +39,7 @@ shop:
   offers: "Vos offres"
   packs: "Heures de support"
   packs_lead: "Chaque intervention est notée sur votre tableau de bord et décomptée à la minute."
-  per_hour: "soit {price} de l'heure"
+  per_hour: "soit {price} HT de l'heure"
   buy: "Acheter"
   no_pack: "Les forfaits arrivent bientôt."
   quote_lead: "Un projet plus large ? Décrivez-le, nous vous envoyons un devis."
@@ -168,3 +168,6 @@ company:
   found: "{name} - {address}"
   closed: "Cette entreprise est fermée au registre."
   unavailable: "Le registre ne répond pas : nous vérifierons plus tard."
+price:
+  with_vat: "TTC"
+  without_vat: "HT"

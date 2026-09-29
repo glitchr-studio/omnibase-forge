@@ -39,7 +39,7 @@ shop:
   offers: "Your offers"
   packs: "Support hours"
   packs_lead: "Every piece of work is logged on your dashboard and counted to the minute."
-  per_hour: "that is {price} an hour"
+  per_hour: "that is {price} an hour, excl. VAT"
   buy: "Buy"
   no_pack: "Packs are coming soon."
   quote_lead: "A bigger project? Describe it and we will send you a quote."
@@ -168,3 +168,6 @@ company:
   found: "{name} - {address}"
   closed: "This company is closed in the register."
   unavailable: "The register does not answer: we will check later."
+price:
+  with_vat: "incl. VAT"
+  without_vat: "excl. VAT"
