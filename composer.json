@@ -57,6 +57,14 @@
         {
             "type": "vcs",
             "url": "https://gitlab.glitchr.dev/public-repository/agnostic/git"
+        },
+        {
+            "type": "vcs",
+            "url": "https://gitlab.glitchr.dev/public-repository/agnostic/omnistate/omnistate"
+        },
+        {
+            "type": "vcs",
+            "url": "https://gitlab.glitchr.dev/public-repository/agnostic/omnistate/annuaire-entreprises"
         }
     ],
     "autoload": {
@@ -77,6 +85,8 @@
         "glitchr/base-bundle": "3.0.*-dev",
         "glitchr/base-bundle-admin": "dev-main",
         "glitchr/base-bundle-market": "dev-main",
+        "glitchr/omnistate": "1.x-dev",
+        "omnistate/annuaire-entreprises": "1.x-dev",
         "symfony/config": "^6.0|^7.0|^8.0",
         "symfony/dependency-injection": "^6.0|^7.0|^8.0",
         "symfony/form": "^6.0|^7.0|^8.0",

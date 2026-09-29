@@ -23,6 +23,7 @@ A software forge for [base-bundle](https://gitlab.glitchr.dev/public-repository/
 - PHP 8.2+, `ext-zip`
 - `glitchr/base-bundle` 3.x, `glitchr/base-bundle-admin`, `glitchr/base-bundle-market`
 - `git/git-bundle` 1.0, with the **php-git2** extension ([RogerGee/php-git2](https://github.com/RogerGee/php-git2))
+- `glitchr/omnistate` with `omnistate/annuaire-entreprises`: the SIRETs typed in quotes and requests, checked against the State's free register
 
 ## Installation
 
@@ -32,6 +33,7 @@ composer require glitchr/base-bundle-forge:dev-main
 
 ```php
 // config/bundles.php
+Omnistate\Bridge\Symfony\OmnistateBundle::class => ['all' => true],
 Base\Forge\ForgeBundle::class => ['all' => true],
 ```
 
