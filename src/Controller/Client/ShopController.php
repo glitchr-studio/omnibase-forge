@@ -8,7 +8,7 @@ use Base\Forge\Entity\Quote;
 use Base\Forge\Enum\QuoteStatus;
 use Base\Forge\Form\QuoteRequestType;
 use Base\Forge\Model\QuoteRequest;
-use Base\Forge\Service\CompanyRegistry;
+use Base\Market\Service\CompanyRegistry;
 use Base\Forge\Repository\QuoteRepository;
 use Base\Forge\Service\HourLedger;
 use Base\Forge\Service\QuoteStatusGuard;

@@ -23,9 +23,9 @@ class QuoteRequestType extends AbstractType
             ->add('contactName', TextType::class, ['label' => '@forge.quote.form.name'])
             ->add('email', EmailType::class, ['label' => '@forge.quote.form.email'])
             ->add('siret', TextType::class, [
-                'label' => '@forge.company.siret',
+                'label' => '@market.company.siret',
                 'required' => false,
-                'help' => '@forge.company.siret_help',
+                'help' => '@market.company.siret_help',
                 'attr' => ['inputmode' => 'numeric', 'autocomplete' => 'off', 'data-controller' => 'siret', 'data-action' => 'siret#check', 'data-siret-url-value' => '/api/company/'],
             ])
             ->add('title', TextType::class, ['label' => '@forge.quote.form.title', 'attr' => ['placeholder' => '@forge.quote.form.title_placeholder']])

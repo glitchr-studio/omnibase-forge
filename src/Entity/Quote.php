@@ -8,7 +8,7 @@ use Base\Forge\Enum\QuoteStatus;
 use Base\Forge\Repository\QuoteRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
-use Base\Forge\Service\CompanyRegistry;
+use Base\Market\Service\CompanyRegistry;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 

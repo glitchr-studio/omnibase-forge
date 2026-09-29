@@ -159,15 +159,6 @@ review:
   signature_help: "Comment signer votre avis s'il paraît sur notre site : prénom, entreprise…"
   send: "Envoyer mon avis"
   thanks: "Merci pour votre avis ! Il nous aide à progresser."
-company:
-  siret: "SIRET de votre entreprise (facultatif)"
-  siret_help: "Pour une entreprise française : nous vérifions sa raison sociale et son adresse auprès du registre de l'État."
-  invalid: "Ce numéro n'est pas un SIREN (9 chiffres) ni un SIRET (14 chiffres) valide."
-  unknown: "Ce numéro n'est connu d'aucune entreprise au registre de l'État."
-  checking: "Vérification…"
-  found: "{name} - {address}"
-  closed: "Cette entreprise est fermée au registre."
-  unavailable: "Le registre ne répond pas : nous vérifierons plus tard."
 price:
   with_vat: "TTC"
   without_vat: "HT"
