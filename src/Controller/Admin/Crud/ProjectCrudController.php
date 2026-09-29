@@ -31,7 +31,7 @@ class ProjectCrudController extends AbstractCrudController
     {
         // Delivered: the project closes and its client is asked for a review.
         $review = Action::new('forgeReview', 'Demander un avis', 'fa-solid fa-star')
-            ->linkToRoute('forge_admin_project_review', fn (Project $project) => ['id' => $project->getId()])
+            ->linkToRoute('forge_admin_project_review', fn (Project $project) => ['id' => $project->getId(), '_token' => $this->actionToken('forge_project_review', $project->getId())])
             ->displayIf(fn (Project $project) => null !== $project->getClient());
 
         return parent::configureActions($actions)->add(Action::INDEX, $review)->add(Action::DETAIL, $review);
@@ -50,5 +50,11 @@ class ProjectCrudController extends AbstractCrudController
         yield DateField::new('dueOn')->setColumns(3);
         yield TextField::new('gitRepository', 'Git repository')->setColumns(4)->setHelp('git-bundle repository name');
         yield TextField::new('repositoryUrl')->setColumns(8)->hideOnIndex()->setHelp('Cloned by git:sync when not in git.repositories');
+    }
+
+    /** A token in the action's link, as for a logout: a link from elsewhere, a prefetch, does nothing (ActionController checks it). */
+    private function actionToken(string $action, ?int $id): string
+    {
+        return $this->container->get('security.csrf.token_manager')->getToken($action.'_'.$id)->getValue();
     }
 }

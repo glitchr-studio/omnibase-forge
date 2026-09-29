@@ -113,18 +113,22 @@ class DownloadController extends AbstractController
             throw $this->createNotFoundException('The archive is missing from the storage: rebuild the release.');
         }
 
-        $license = $request->query->getInt('license') ? $this->entityManager->getRepository(License::class)->find($request->query->getInt('license')) : null;
-        $user = $this->getUser();
-        $ip = $request->getClientIp();
-        $this->entityManager->persist(new Download(
-            $artifact,
-            // Composer's downloads come with no session: whose seat it was is not known.
-            $user instanceof User ? $user : null,
-            $license,
-            $ip ? hash('sha256', $ip.$this->getParameter('kernel.secret')) : null,
-            'composer' === $request->query->get('channel') ? 'composer' : 'web',
-        ));
-        $this->entityManager->flush();
+        // One download, one row: not a HEAD, not the rest of a download
+        // resumed or fetched in parts (a Range from further than the start).
+        if ($this->isNewDownload($request)) {
+            $license = $request->query->getInt('license') ? $this->entityManager->getRepository(License::class)->find($request->query->getInt('license')) : null;
+            $user = $this->getUser();
+            $ip = $request->getClientIp();
+            $this->entityManager->persist(new Download(
+                $artifact,
+                // Composer's downloads come with no session: whose seat it was is not known.
+                $user instanceof User ? $user : null,
+                $license,
+                $ip ? hash('sha256', $ip.$this->getParameter('kernel.secret')) : null,
+                'composer' === $request->query->get('channel') ? 'composer' : 'web',
+            ));
+            $this->entityManager->flush();
+        }
 
         if ($this->accelPrefix) {
             return new Response('', Response::HTTP_OK, [
@@ -167,5 +171,15 @@ class DownloadController extends AbstractController
         }
 
         return $bySoftware;
+    }
+
+    private function isNewDownload(Request $request): bool
+    {
+        if ($request->isMethod('HEAD')) {
+            return false;
+        }
+        $range = (string) $request->headers->get('Range');
+
+        return '' === $range || (bool) preg_match('/^bytes=0-/', $range);
     }
 }

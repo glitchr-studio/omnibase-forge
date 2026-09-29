@@ -38,15 +38,25 @@ class ReleaseSync
                 continue;
             }
 
-            $details = $this->git->getTag($repository, $name);
             $release = new Release($software, $match[1]);
-            $release->setTag($name);
-            $release->setCommitSha($details['sha']);
-            $release->setChangelog($details['message']);
-            $release->setPublishedAt($details['date']);
+            try {
+                $details = $this->git->getTag($repository, $name);
+                $release->setTag($name);
+                $release->setCommitSha($details['sha']);
+                $release->setChangelog($details['message']);
+                $release->setPublishedAt($details['date']);
 
-            if ($build) {
-                $this->builder->build($release);
+                if ($build) {
+                    $this->builder->build($release);
+                }
+            } catch (\Throwable $e) {
+                // Attached to its software by its constructor: left there, the
+                // run's next flush (the next software's) cascaded in a release
+                // without an archive - skipped by findRelease() for ever, 404 to
+                // download.
+                $software->removeRelease($release);
+
+                throw $e;
             }
 
             $this->entityManager->persist($release);

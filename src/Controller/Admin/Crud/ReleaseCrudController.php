@@ -28,7 +28,7 @@ class ReleaseCrudController extends AbstractCrudController
     public function configureActions(Actions $actions): Actions
     {
         $build = Action::new('forgeBuild', 'Build', 'fa-solid fa-file-zipper')
-            ->linkToRoute('forge_admin_release_build', fn (Release $release) => ['id' => $release->getId()]);
+            ->linkToRoute('forge_admin_release_build', fn (Release $release) => ['id' => $release->getId(), '_token' => $this->actionToken('forge_release_build', $release->getId())]);
 
         return parent::configureActions($actions)->add(Action::INDEX, $build)->add(Action::DETAIL, $build);
     }
@@ -42,5 +42,11 @@ class ReleaseCrudController extends AbstractCrudController
         yield TextField::new('commitSha')->setColumns(3)->hideOnIndex();
         yield DateTimeField::new('publishedAt')->setColumns(4);
         yield TextareaField::new('changelog')->hideOnIndex();
+    }
+
+    /** A token in the action's link, as for a logout: a link from elsewhere, a prefetch, does nothing (ActionController checks it). */
+    private function actionToken(string $action, ?int $id): string
+    {
+        return $this->container->get('security.csrf.token_manager')->getToken($action.'_'.$id)->getValue();
     }
 }

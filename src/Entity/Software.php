@@ -245,6 +245,14 @@ class Software extends Thread implements LinkableInterface
         return $this;
     }
 
+    /** A release never saved, taken back (its build failed): the next flush must not cascade it in. */
+    public function removeRelease(Release $release): self
+    {
+        $this->releases->removeElement($release);
+
+        return $this;
+    }
+
     public function getLatestRelease(): ?Release
     {
         foreach ($this->releases as $release) {

@@ -8,6 +8,7 @@ use Base\Forge\Entity\Quote;
 use Base\Market\Entity\Order;
 use Base\Market\Entity\Store;
 use Base\Market\Service\Cart;
+use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
@@ -37,21 +38,36 @@ class QuoteToOrder
         $store = $this->entityManager->getRepository(Store::class)->findOneBy(['slug' => $this->storeSlug])
             ?? throw new \LogicException(sprintf('The support store "%s" does not exist: create it in the back office.', $this->storeSlug));
 
-        $pack = $quote->getProduct();
-        if (!$pack) {
-            $pack = new HourPack(null, $store, $quote->getTotal(), $quote->getCurrency());
-            $pack->setTitle(sprintf('%s — %s', $quote->getReference(), $quote->getTitle()));
-            $pack->setSlug(strtolower($quote->getReference()).'-'.substr($quote->getToken(), 0, 6));
-            $pack->setExcerpt($quote->getTitle());
-            $pack->setMinutes($quote->getTotalMinutes());
-            $pack->setListed(false);
-            $pack->setStock(1);
-            $this->entityManager->persist($pack);
+        // The quote's row locked and read again: a double click (or two tabs)
+        // made two one-off packs, the client paid twice, and the second pack,
+        // not the quote's, never marked it paid.
+        $this->entityManager->beginTransaction();
+        try {
+            if (null !== $quote->getId()) {
+                $this->entityManager->lock($quote, LockMode::PESSIMISTIC_WRITE);
+                $this->entityManager->refresh($quote);
+            }
+            $pack = $quote->getProduct();
+            if (!$pack) {
+                $pack = new HourPack(null, $store, $quote->getTotal(), $quote->getCurrency());
+                $pack->setTitle(sprintf('%s — %s', $quote->getReference(), $quote->getTitle()));
+                $pack->setSlug(strtolower($quote->getReference()).'-'.substr($quote->getToken(), 0, 6));
+                $pack->setExcerpt($quote->getTitle());
+                $pack->setMinutes($quote->getTotalMinutes());
+                $pack->setListed(false);
+                $pack->setStock(1);
+                $this->entityManager->persist($pack);
 
-            $quote->setProduct($pack);
-            $quote->setClient($quote->getClient() ?? $client);
-            $quote->accept();
-            $this->entityManager->flush();
+                $quote->setProduct($pack);
+                $quote->setClient($quote->getClient() ?? $client);
+                $quote->accept();
+                $this->entityManager->flush();
+            }
+            $this->entityManager->commit();
+        } catch (\Throwable $e) {
+            $this->entityManager->rollback();
+
+            throw $e;
         }
 
         return $this->cart->add($pack, 1);

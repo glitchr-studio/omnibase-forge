@@ -2,6 +2,8 @@
 
 namespace Base\Forge\Controller\Admin\Crud;
 
+use Doctrine\ORM\EntityManagerInterface;
+
 use Base\Admin\Config\Action;
 use Base\Admin\Config\Actions;
 use Base\Admin\Controller\AbstractCrudController;
@@ -38,7 +40,7 @@ class QuoteCrudController extends AbstractCrudController
     public function configureActions(Actions $actions): Actions
     {
         $send = Action::new('forgeSend', 'Send', 'fa-solid fa-paper-plane')
-            ->linkToRoute('forge_admin_quote_send', fn (Quote $quote) => ['id' => $quote->getId()])
+            ->linkToRoute('forge_admin_quote_send', fn (Quote $quote) => ['id' => $quote->getId(), '_token' => $this->actionToken('forge_quote_send', $quote->getId())])
             ->displayIf(fn (Quote $quote) => \in_array($quote->getStatus(), [QuoteStatus::REQUESTED, QuoteStatus::DRAFT, QuoteStatus::SENT], true));
 
         return parent::configureActions($actions)->add(Action::INDEX, $send)->add(Action::DETAIL, $send);
@@ -70,8 +72,23 @@ class QuoteCrudController extends AbstractCrudController
 
     public function createEntity(string $entityFqcn): object
     {
-        $reference = $this->entityManager->getRepository(Quote::class)->nextReference();
+        return (new Quote())->setStatus(QuoteStatus::DRAFT);
+    }
 
-        return (new Quote($reference))->setStatus(QuoteStatus::DRAFT);
+    /** Numbered when saved, not when the form opens: two forms open took the same number. */
+    public function persistEntity(EntityManagerInterface $entityManager, object $entity): void
+    {
+        if ($entity instanceof Quote) {
+            $entityManager->getRepository(Quote::class)->saveNumbered($entity);
+
+            return;
+        }
+        parent::persistEntity($entityManager, $entity);
+    }
+
+    /** A token in the action's link, as for a logout: a link from elsewhere, a prefetch, does nothing (ActionController checks it). */
+    private function actionToken(string $action, ?int $id): string
+    {
+        return $this->container->get('security.csrf.token_manager')->getToken($action.'_'.$id)->getValue();
     }
 }

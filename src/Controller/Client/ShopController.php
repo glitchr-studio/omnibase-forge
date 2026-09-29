@@ -79,7 +79,7 @@ class ShopController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $quote = new Quote($this->quotes->nextReference());
+            $quote = new Quote();
             $quote->setClient($user instanceof User ? $user : null);
             $quote->setContactName($data->contactName);
             $quote->setEmail($data->email);
@@ -90,8 +90,7 @@ class ShopController extends AbstractController
                 $quote->setSiret($data->siret)->setCompanyCheck($registry->lookup($data->siret));
             }
             $quote->setStatus(QuoteStatus::REQUESTED);
-            $this->entityManager->persist($quote);
-            $this->entityManager->flush();
+            $this->quotes->saveNumbered($quote);
 
             if ($contact) {
                 $mailer->send((new TemplatedEmail())

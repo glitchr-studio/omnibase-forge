@@ -54,6 +54,8 @@ class HourCredit
 
     public function getId(): ?int { return $this->id; }
     public function getUser(): User { return $this->user; }
+    /** A time entry's debit follows it to another client's project (TimeEntryLedgerSubscriber). */
+    public function setUser(User $user): self { $this->user = $user; return $this; }
     public function getMinutes(): int { return $this->minutes; }
     public function setMinutes(int $minutes): self { $this->minutes = $minutes; return $this; }
     public function getReason(): CreditReason { return $this->reason; }

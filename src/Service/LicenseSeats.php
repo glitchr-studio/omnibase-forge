@@ -5,6 +5,7 @@ namespace Base\Forge\Service;
 use Base\Entity\User;
 use Base\Forge\Entity\License;
 use Base\Forge\Entity\LicenseSeat;
+use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
@@ -37,19 +38,38 @@ class LicenseSeats
         if (!filter_var($email, \FILTER_VALIDATE_EMAIL)) {
             throw new \InvalidArgumentException('forge.seat.invalid_email');
         }
-        if ($seat = $license->findSeat($email)) {
-            return $seat;
-        }
-        if ($license->getSeatsLeft() < 1) {
-            throw new \InvalidArgumentException('forge.seat.none_left');
-        }
 
-        $seat = new LicenseSeat($license, $email, $this->verifiedUser($email));
-        // Told below, with who gave it: not again by the entity listener.
-        $seat->markNotified();
-        $license->addHolder($seat);
-        $this->entityManager->persist($seat);
-        $this->entityManager->flush();
+        // The licence's row locked, its seats read from the database: two
+        // e-mails given at once both found the last seat free, and the same
+        // e-mail twice broke on the unique seat.
+        $this->entityManager->beginTransaction();
+        try {
+            if (null !== $license->getId()) {
+                $this->entityManager->lock($license, LockMode::PESSIMISTIC_WRITE);
+            }
+            $seats = $this->entityManager->getRepository(LicenseSeat::class);
+            if ($seat = $license->getId() ? $seats->findOneBy(['license' => $license, 'email' => $email]) : $license->findSeat($email)) {
+                $this->entityManager->commit();
+
+                return $seat;
+            }
+            $taken = $license->getId() ? $seats->count(['license' => $license]) : $license->getSeatsTaken();
+            if ($license->getSeats() - $taken < 1) {
+                throw new \InvalidArgumentException('forge.seat.none_left');
+            }
+
+            $seat = new LicenseSeat($license, $email, $this->verifiedUser($email));
+            // Told below, with who gave it: not again by the entity listener.
+            $seat->markNotified();
+            $license->addHolder($seat);
+            $this->entityManager->persist($seat);
+            $this->entityManager->flush();
+            $this->entityManager->commit();
+        } catch (\Throwable $e) {
+            $this->entityManager->rollback();
+
+            throw $e;
+        }
 
         $this->notify($seat, $by);
 

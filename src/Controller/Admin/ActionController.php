@@ -37,6 +37,7 @@ class ActionController extends AbstractController
     #[Route('/release/{id}/build', name: 'forge_admin_release_build', requirements: ['id' => '\d+'])]
     public function build(Request $request, int $id, ReleaseSync $sync): RedirectResponse
     {
+        $this->assertToken($request, 'forge_release_build', $id);
         $release = $this->entityManager->find(Release::class, $id) ?? throw $this->createNotFoundException();
         try {
             $sync->rebuild($release);
@@ -51,6 +52,7 @@ class ActionController extends AbstractController
     #[Route('/quote/{id}/send', name: 'forge_admin_quote_send', requirements: ['id' => '\d+'])]
     public function send(Request $request, int $id, MailerInterface $mailer): RedirectResponse
     {
+        $this->assertToken($request, 'forge_quote_send', $id);
         $quote = $this->entityManager->find(Quote::class, $id) ?? throw $this->createNotFoundException();
         if ($quote->getTotalMinutes() <= 0) {
             $this->addFlash('error', sprintf('%s has no hours to sell: add its lines first.', $quote->getReference()));
@@ -77,6 +79,7 @@ class ActionController extends AbstractController
     #[Route('/project/{id}/review', name: 'forge_admin_project_review', requirements: ['id' => '\d+'])]
     public function review(Request $request, int $id, ProjectReviews $reviews): RedirectResponse
     {
+        $this->assertToken($request, 'forge_project_review', $id);
         $project = $this->entityManager->find(Project::class, $id) ?? throw $this->createNotFoundException();
         try {
             $reviews->request($project);
@@ -115,5 +118,18 @@ class ActionController extends AbstractController
     private function back(Request $request): RedirectResponse
     {
         return $this->redirect($request->headers->get('referer') ?: $this->generateUrl('admin'));
+    }
+
+    /**
+     * These act (a mail sent, an archive rebuilt, a project closed): the
+     * token their link carries (the CRUD controllers' actionToken()) says the
+     * click came from the back office - not a link from elsewhere, not a
+     * prefetch, which sent the mail twice.
+     */
+    private function assertToken(Request $request, string $action, int $id): void
+    {
+        if (!$this->isCsrfTokenValid($action.'_'.$id, (string) $request->query->get('_token'))) {
+            throw $this->createAccessDeniedException();
+        }
     }
 }

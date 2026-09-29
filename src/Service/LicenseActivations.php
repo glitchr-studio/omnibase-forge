@@ -6,6 +6,7 @@ use Base\Forge\Entity\LicenseActivation;
 use Base\Forge\Exception\LicenseActivationException;
 use Base\Forge\Entity\LicenseSeat;
 use Base\Forge\Repository\LicenseRepository;
+use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\EntityManagerInterface;
 
 /**
@@ -41,28 +42,41 @@ class LicenseActivations
         $seat = $this->seat($key, $software);
 
         $machine = LicenseActivation::hash($machineId);
-        $activation = $seat->findActivation($machine);
-        if (!$activation) {
-            if ($seat->getMachinesLeft() < 1) {
-                throw new LicenseActivationException(LicenseActivationException::NO_MACHINE_LEFT, [
-                    'machines' => array_map(fn (LicenseActivation $a) => [
-                        'name' => $a->getName(),
-                        'platform' => $a->getPlatform(),
-                        'last_seen' => $a->getLastSeenAt()->format(\DATE_ATOM),
-                    ], $seat->getActivations()->toArray()),
-                ]);
-            }
-            $activation = new LicenseActivation($seat, $machine);
-            $seat->addActivation($activation);
-            $this->entityManager->persist($activation);
-        }
-        $activation->setName($name ?? $activation->getName())
-            ->setPlatform($platform ?? $activation->getPlatform())
-            ->setVersion($version ?? $activation->getVersion())
-            ->seen();
-        $this->entityManager->flush();
 
-        return $this->tokens->issue($activation) + ['activation' => $activation, 'machines_left' => $seat->getMachinesLeft()];
+        // The seat's row locked, its machines read from the database: two
+        // machines activating at once both found the last place free, and the
+        // same machine asking twice broke on the unique (seat, machine).
+        $this->entityManager->beginTransaction();
+        try {
+            $this->entityManager->lock($seat, LockMode::PESSIMISTIC_WRITE);
+            $activation = $this->entityManager->getRepository(LicenseActivation::class)->findOneBy(['seat' => $seat, 'machine' => $machine]);
+            if (!$activation) {
+                if ($this->machinesLeft($seat) < 1) {
+                    throw new LicenseActivationException(LicenseActivationException::NO_MACHINE_LEFT, [
+                        'machines' => array_map(fn (LicenseActivation $a) => [
+                            'name' => $a->getName(),
+                            'platform' => $a->getPlatform(),
+                            'last_seen' => $a->getLastSeenAt()->format(\DATE_ATOM),
+                        ], $this->entityManager->getRepository(LicenseActivation::class)->findBy(['seat' => $seat])),
+                    ]);
+                }
+                $activation = new LicenseActivation($seat, $machine);
+                $seat->addActivation($activation);
+                $this->entityManager->persist($activation);
+            }
+            $activation->setName($name ?? $activation->getName())
+                ->setPlatform($platform ?? $activation->getPlatform())
+                ->setVersion($version ?? $activation->getVersion())
+                ->seen();
+            $this->entityManager->flush();
+            $this->entityManager->commit();
+        } catch (\Throwable $e) {
+            $this->entityManager->rollback();
+
+            throw $e;
+        }
+
+        return $this->tokens->issue($activation) + ['activation' => $activation, 'machines_left' => $this->machinesLeft($seat)];
     }
 
     /**
@@ -107,5 +121,14 @@ class LicenseActivations
         }
 
         return $seat;
+    }
+
+    /** The seat's machines left, counted in the database - not in a collection loaded before the lock. */
+    private function machinesLeft(LicenseSeat $seat): int
+    {
+        $taken = (int) $this->entityManager->createQuery('SELECT COUNT(a.id) FROM '.LicenseActivation::class.' a WHERE a.seat = :seat')
+            ->setParameter('seat', $seat)->getSingleScalarResult();
+
+        return max(0, (int) $seat->getLicense()?->getMachinesPerSeat() - $taken);
     }
 }

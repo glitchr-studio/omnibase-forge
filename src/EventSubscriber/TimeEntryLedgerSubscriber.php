@@ -35,6 +35,12 @@ final class TimeEntryLedgerSubscriber
 
         foreach ($entries as $entry) {
             $existing = $entry->getId() ? $entityManager->getRepository(HourCredit::class)->findOneBy(['timeEntry' => $entry]) : null;
+            // Moved to another client's project: its debit moves with it - it
+            // stayed on the old client, and the new one was never charged.
+            $client = $entry->getProject()?->getClient();
+            if ($existing && $client && $existing->getUser() !== $client) {
+                $existing->setUser($client);
+            }
             $credit = $this->ledger->debitFor($entry, $existing);
 
             if ($credit) {
