@@ -3,7 +3,7 @@
 namespace Base\Forge\Entity\Product;
 
 use Base\Database\Attribute\DiscriminatorEntry;
-use Base\Market\Entity\Product;
+use Base\Marketplace\Entity\Product;
 use Doctrine\ORM\Mapping as ORM;
 
 /**

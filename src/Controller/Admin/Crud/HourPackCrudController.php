@@ -5,7 +5,7 @@ namespace Base\Forge\Controller\Admin\Crud;
 use Base\Field\BooleanField;
 use Base\Field\NumberField;
 use Base\Forge\Entity\Product\HourPack;
-use Base\Market\Controller\Admin\Crud\ProductCrudController;
+use Base\Marketplace\Controller\Admin\Crud\ProductCrudController;
 
 /** Hour packs: a market product (store, price, stock) plus the hours it credits. */
 class HourPackCrudController extends ProductCrudController

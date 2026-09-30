@@ -77,7 +77,7 @@ location /_protected/forge/ {
 
 ## How a purchase is delivered
 
-`Base\Market\Service\Checkout::confirm()` dispatches `OrderPaidEvent`, and `Base\Forge\EventSubscriber\OrderPaidSubscriber` delivers the order:
+`Base\Marketplace\Service\Checkout::confirm()` dispatches `OrderPaidEvent`, and `Base\Forge\EventSubscriber\OrderPaidSubscriber` delivers the order:
 
 | Product | Delivered |
 |---|---|

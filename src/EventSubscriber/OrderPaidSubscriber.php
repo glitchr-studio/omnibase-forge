@@ -12,7 +12,7 @@ use Base\Forge\Enum\QuoteStatus;
 use Base\Forge\Repository\HourCreditRepository;
 use Base\Forge\Service\HourLedger;
 use Base\Forge\Service\LicenseIssuer;
-use Base\Market\Event\OrderPaidEvent;
+use Base\Marketplace\Event\OrderPaidEvent;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\Attribute\AsEventListener;

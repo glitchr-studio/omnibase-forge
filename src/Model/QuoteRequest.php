@@ -2,7 +2,7 @@
 
 namespace Base\Forge\Model;
 
-use Base\Market\Validator\CompanyNumber;
+use Base\Marketplace\Validator\CompanyNumber;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**

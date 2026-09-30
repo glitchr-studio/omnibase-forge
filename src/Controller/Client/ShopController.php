@@ -8,12 +8,12 @@ use Base\Forge\Entity\Quote;
 use Base\Forge\Enum\QuoteStatus;
 use Base\Forge\Form\QuoteRequestType;
 use Base\Forge\Model\QuoteRequest;
-use Base\Market\Service\CompanyRegistry;
+use Base\Marketplace\Service\CompanyRegistry;
 use Base\Forge\Repository\QuoteRepository;
 use Base\Forge\Service\HourLedger;
 use Base\Forge\Service\QuoteStatusGuard;
 use Base\Forge\Service\QuoteToOrder;
-use Base\Market\Service\CartException;
+use Base\Marketplace\Service\CartException;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -138,7 +138,7 @@ class ShopController extends AbstractController
         try {
             $order = $quoteToOrder->accept($quote, $user);
         } catch (CartException $e) {
-            $this->addFlash('error', '@market.'.$e->getMessage());
+            $this->addFlash('error', '@marketplace.'.$e->getMessage());
 
             return $this->redirectToRoute('forge_quote', ['token' => $token]);
         } catch (\DomainException $e) {
@@ -147,7 +147,7 @@ class ShopController extends AbstractController
             return $this->redirectToRoute('forge_quote', ['token' => $token]);
         }
 
-        return $this->redirectToRoute('market_checkout', ['order' => $order->getId()]);
+        return $this->redirectToRoute('marketplace_checkout', ['order' => $order->getId()]);
     }
 
     private function findQuote(string $token): Quote

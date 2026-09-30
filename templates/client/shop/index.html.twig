@@ -46,8 +46,8 @@
             {% if pack.excerpt %}<p>{{ pack.excerpt|striptags }}</p>{% endif %}
             <footer>
             {% if is_granted('ROLE_USER') %}
-                <form method="post" action="{{ path('market_cart_add', {id: pack.id}) }}">
-                    <input type="hidden" name="_token" value="{{ csrf_token('market_cart') }}">
+                <form method="post" action="{{ path('marketplace_cart_add', {id: pack.id}) }}">
+                    <input type="hidden" name="_token" value="{{ csrf_token('marketplace_cart') }}">
                     <button type="submit" class="forge-btn forge-btn-primary"><span>{{ '@forge.shop.buy'|trans }}</span><svg width="13" height="10" viewBox="0 0 13 10" aria-hidden="true"><path d="M1,5 L11,5"></path><polyline points="8 1 12 5 8 9"></polyline></svg></button>
                 </form>
             {% else %}

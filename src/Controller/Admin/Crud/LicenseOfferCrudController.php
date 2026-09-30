@@ -5,7 +5,7 @@ namespace Base\Forge\Controller\Admin\Crud;
 use Base\Field\AssociationField;
 use Base\Field\IntegerField;
 use Base\Forge\Entity\Product\LicenseOffer;
-use Base\Market\Controller\Admin\Crud\ProductCrudController;
+use Base\Marketplace\Controller\Admin\Crud\ProductCrudController;
 
 /** Licence offers: a market product that issues a licence of its software per unit paid. */
 class LicenseOfferCrudController extends ProductCrudController

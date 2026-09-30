@@ -19,7 +19,7 @@ class ForgeBundle extends AbstractBaseBundle
     use SingletonTrait;
 
     // The trait's protected no-op __construct() would hide the inherited
-    // one; redeclared public, as MarketBundle and AdminBundle do.
+    // one; redeclared public, as MarketplaceBundle and AdminBundle do.
     public function __construct()
     {
         parent::__construct();

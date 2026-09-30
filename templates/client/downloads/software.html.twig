@@ -73,8 +73,8 @@
                     {{ offer.updatesMonths ? '@forge.offer.updates'|trans({months: offer.updatesMonths}) : '@forge.offer.all_updates'|trans }}
                 </p>
                 {% if is_granted('ROLE_USER') %}
-                <form method="post" action="{{ path('market_cart_add', {id: offer.id}) }}">
-                    <input type="hidden" name="_token" value="{{ csrf_token('market_cart') }}">
+                <form method="post" action="{{ path('marketplace_cart_add', {id: offer.id}) }}">
+                    <input type="hidden" name="_token" value="{{ csrf_token('marketplace_cart') }}">
                     <button type="submit" class="forge-btn forge-btn-primary"><span>{{ '@forge.offer.add'|trans }}</span></button>
                 </form>
                 {% else %}
