@@ -84,7 +84,7 @@
         "git/git-bundle": "1.0.x-dev",
         "glitchr/base-bundle": "3.0.*-dev",
         "glitchr/base-bundle-admin": "dev-main",
-        "glitchr/base-bundle-market": "dev-main",
+        "glitchr/base-bundle-marketplace": "dev-main",
         "glitchr/omnistate": "1.x-dev",
         "omnistate/annuaire-entreprises": "1.x-dev",
         "symfony/config": "^6.0|^7.0|^8.0",
