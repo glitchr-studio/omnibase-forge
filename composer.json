@@ -35,7 +35,7 @@
         "php": "^8.2",
         "ext-zip": "*",
         "doctrine/orm": "^2.15|^3.0",
-        "git/git-bundle": "1.0.x-dev",
+        "git/git-bundle": "1.x-dev",
         "glitchr/omnibase": "3.0.*-dev",
         "omnibase/admin": "dev-main",
         "omnibase/marketplace": "dev-main",
