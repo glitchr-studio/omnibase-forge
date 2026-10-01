@@ -1,5 +1,5 @@
 {
-    "name": "glitchr/base-bundle-forge",
+    "name": "omnibase/forge",
     "type": "symfony-bundle",
     "description": "Software forge for base-bundle: releases built from git tags, free and licensed downloads, a private Composer repository, client projects with a shared board, prepaid support hours and quotes - paid through base-bundle-market",
     "keywords": [
@@ -82,9 +82,9 @@
         "ext-zip": "*",
         "doctrine/orm": "^2.15|^3.0",
         "git/git-bundle": "1.0.x-dev",
-        "glitchr/base-bundle": "3.0.*-dev",
-        "glitchr/base-bundle-admin": "dev-main",
-        "glitchr/base-bundle-marketplace": "dev-main",
+        "glitchr/omnibase": "3.0.*-dev",
+        "omnibase/admin": "dev-main",
+        "omnibase/marketplace": "dev-main",
         "glitchr/omnistate": "1.x-dev",
         "omnistate/annuaire-entreprises": "1.x-dev",
         "symfony/config": "^6.0|^7.0|^8.0",
