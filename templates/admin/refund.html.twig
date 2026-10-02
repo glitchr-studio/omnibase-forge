@@ -28,7 +28,7 @@
     <div class="card" style="padding: 1rem 1.25rem;">
         <dl>
             <dt>Client</dt><dd>{{ order.customer ?? '—' }}{% if order.customer %} · {{ order.customer.email }}{% endif %}</dd>
-            <dt>Payé</dt><dd>{{ summary.paid|forge_money(summary.currency) }}{% if order.paidAt %} · le {{ order.paidAt|date('d/m/Y') }}{% endif %} · {{ summary.stripe ? 'par carte (Stripe)' : 'par virement' }}</dd>
+            <dt>Payé</dt><dd>{{ summary.paid|forge_money(summary.currency) }}{% if order.paidAt %} · le {{ order.paidAt|date('d/m/Y') }}{% endif %} · {{ summary.stripe ? 'en ligne (' ~ summary.provider ~ ')' : 'par virement' }}</dd>
             <dt>Heures achetées</dt><dd>{{ summary.minutes|forge_hours }}</dd>
             <dt>Encore inutilisées</dt><dd>{{ summary.unused|forge_hours }}</dd>
             {% if summary.refunded > 0 %}<dt>Déjà remboursé</dt><dd>{{ summary.refunded|forge_money(summary.currency) }} · {{ summary.refunded_minutes|forge_hours }}</dd>{% endif %}
@@ -38,7 +38,7 @@
 
     {% if summary.refundable > 0 %}
     <form method="post" class="card" style="padding: 1rem 1.25rem;"
-          data-confirm="Rembourser ce montant et prévenir le client ? {{ summary.stripe ? 'Stripe rembourse la carte aussitôt.' : 'Le virement reste à faire à la main.' }}">
+          data-confirm="Rembourser ce montant et prévenir le client ? {{ summary.stripe ? (summary.provider|capitalize) ~ ' rembourse aussitôt.' : 'Le virement reste à faire à la main.' }}">
         <input type="hidden" name="_token" value="{{ csrf_token('forge_order_refund_' ~ order.reference) }}">
         <div class="forge-refund-row">
             <label>Montant ({{ summary.currency }})

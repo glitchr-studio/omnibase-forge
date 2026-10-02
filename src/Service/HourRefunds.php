@@ -9,7 +9,8 @@ use Base\Forge\Enum\CreditReason;
 use Base\Forge\Exception\HourRefundException;
 use Base\Marketplace\Entity\Order;
 use Base\Marketplace\Entity\Order\Transaction;
-use Base\Marketplace\Payment\StripeGateway;
+use Base\Marketplace\Payment\Omnitrade\OmnitradeGateway;
+use Base\Marketplace\Payment\PaymentGatewayRegistry;
 use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
@@ -23,9 +24,10 @@ use Symfony\Component\Mailer\MailerInterface;
  * hours still unused (the ledger is one pool: the order's hours, capped by
  * the balance left).
  *
- * Paid by card (a Stripe Checkout session on the payment), the amount goes
- * back through Stripe - market's StripeGateway, on Omnipay, as the payment; otherwise (bank transfer) it is recorded,
- * to be wired back by hand. Then the hours leave the ledger, the order is
+ * Paid online (through one of glitchr/omnitrade's gateways - Stripe, PayPal...
+ * - the marketplace's bridge keeps the provider's reference on the payment),
+ * the amount goes back through that provider; otherwise (bank transfer) it is
+ * recorded, to be wired back by hand. Then the hours leave the ledger, the order is
  * marked refunded once fully paid back, and the client gets the
  * explanation by e-mail.
  */
@@ -34,7 +36,7 @@ class HourRefunds
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
         private readonly HourLedger $ledger,
-        private readonly StripeGateway $stripe,
+        private readonly PaymentGatewayRegistry $gateways,
         private readonly MailerInterface $mailer,
     ) {
     }
@@ -47,7 +49,7 @@ class HourRefunds
     /**
      * What this order can still give back.
      *
-     * @return array{paid: int, refunded: int, refundable: int, minutes: int, refunded_minutes: int, unused: int, suggested: int, currency: string, stripe: bool}
+     * @return array{paid: int, refunded: int, refundable: int, minutes: int, refunded_minutes: int, unused: int, suggested: int, currency: string, stripe: bool, provider: ?string}
      */
     public function summary(Order $order): array
     {
@@ -77,7 +79,9 @@ class HourRefunds
             'unused' => $unused,
             'suggested' => $minutes > 0 ? min($refundable, (int) round($paid * $unused / $minutes)) : $refundable,
             'currency' => $order->getCurrency(),
-            'stripe' => null !== $this->stripeSession($order),
+            // "stripe" by its old name: paid online, refundable through the provider.
+            'stripe' => null !== $this->bridge($order) && null !== $this->providerReference($order),
+            'provider' => $this->bridge($order)?->provider(),
         ];
     }
 
@@ -112,11 +116,11 @@ class HourRefunds
                 throw new HourRefundException(sprintf('Au plus %d minutes peuvent être reprises sur cette commande.', $summary['minutes'] - $summary['refunded_minutes']));
             }
 
-            $session = $this->stripeSession($order);
-            $refund = new HourRefund($order->getCustomer(), (string) $order->getReference(), $amount, $summary['currency'], $minutes, $reason, $session ? HourRefund::STRIPE : HourRefund::TRANSFER);
+            $online = $summary['stripe'];
+            $refund = new HourRefund($order->getCustomer(), (string) $order->getReference(), $amount, $summary['currency'], $minutes, $reason, $online ? HourRefund::STRIPE : HourRefund::TRANSFER);
             $refund->setRefundedBy($by);
-            if ($session) {
-                $refund->setStripeRefund($this->refundOnStripe($order, $session, $amount, \count($this->refunds((string) $order->getReference()))));
+            if ($online) {
+                $refund->setStripeRefund($this->refundThroughProvider($order, $amount, \count($this->refunds((string) $order->getReference()))));
             }
             $this->entityManager->persist($refund);
 
@@ -143,12 +147,21 @@ class HourRefunds
         return $refund;
     }
 
-    /** The Checkout session the order was paid with, when it was by card. */
-    private function stripeSession(Order $order): ?string
+    /** The provider's reference the order was paid under (a Checkout session, a PayPal order), when it was paid online. */
+    private function providerReference(Order $order): ?string
     {
-        $session = $this->paidTransaction($order)?->getDetails()['stripe_session'] ?? null;
+        $transaction = $this->paidTransaction($order);
+        $reference = $transaction?->getWebhook() ?: ($transaction?->getDetails()['reference'] ?? $transaction?->getDetails()['stripe_session'] ?? null);
 
-        return \is_string($session) && '' !== $session ? $session : null;
+        return \is_string($reference) && '' !== $reference ? $reference : null;
+    }
+
+    /** The marketplace's bridge to the omnitrade gateway the order's payment method names, when it is one. */
+    private function bridge(Order $order): ?OmnitradeGateway
+    {
+        $bridge = $this->gateways->get($order->getPaymentMethod()?->getGatewayFactory());
+
+        return $bridge instanceof OmnitradeGateway ? $bridge : null;
     }
 
     private function paidTransaction(Order $order): ?Transaction
@@ -163,18 +176,19 @@ class HourRefunds
         return $last;
     }
 
-    /** Stripe's refund id (market's StripeGateway, on Omnipay); throws, having changed nothing, when Stripe says no. */
-    private function refundOnStripe(Order $order, string $session, int $amount, int $previous): string
+    /** The provider's refund id (through the marketplace's omnitrade bridge); throws, having changed nothing, when the provider says no. */
+    private function refundThroughProvider(Order $order, int $amount, int $previous): string
     {
-        $method = $order->getPaymentMethod();
-        if (!$method || '' === (string) ($method->getGatewayParameters()['api_key'] ?? '')) {
-            throw new HourRefundException('Aucune clef Stripe : renseignez-la dans Clefs d\'API.');
+        $bridge = $this->bridge($order);
+        $transaction = $this->paidTransaction($order);
+        if (!$bridge || !$transaction) {
+            throw new HourRefundException('Cette commande n\'a pas été payée en ligne : le remboursement se fait par virement.');
         }
 
         try {
-            return $this->stripe->refund($method, $session, $amount, $order->getCurrency(), sprintf('forge-refund-%s-%d', $order->getReference(), $previous + 1));
+            return $bridge->refund($transaction, $amount, $order->getCurrency(), sprintf('forge-refund-%s-%d', $order->getReference(), $previous + 1));
         } catch (\Throwable $e) {
-            throw new HourRefundException('Stripe n\'a pas remboursé : '.$e->getMessage(), 0, $e);
+            throw new HourRefundException(sprintf('%s n\'a pas remboursé : %s', ucfirst($bridge->provider()), $e->getMessage()), 0, $e);
         }
     }
 }
