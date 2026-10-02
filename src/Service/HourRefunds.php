@@ -151,9 +151,9 @@ class HourRefunds
     private function providerReference(Order $order): ?string
     {
         $transaction = $this->paidTransaction($order);
-        $reference = $transaction?->getWebhook() ?: ($transaction?->getDetails()['reference'] ?? $transaction?->getDetails()['stripe_session'] ?? null);
+        $reference = $transaction ? OmnitradeGateway::reference($transaction) : '';
 
-        return \is_string($reference) && '' !== $reference ? $reference : null;
+        return '' !== $reference ? $reference : null;
     }
 
     /** The marketplace's bridge to the omnitrade gateway the order's payment method names, when it is one. */
