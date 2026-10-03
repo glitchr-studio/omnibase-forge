@@ -12,7 +12,7 @@ use Base\Forge\Repository\LicenseRepository;
 use Base\Forge\Repository\SoftwareRepository;
 use Base\Forge\Security\Voter\ArtifactVoter;
 use Base\Forge\Service\ArtifactBuilder;
-use Base\Forge\Service\DownloadLinks;
+use Base\Service\DownloadLinks;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
@@ -39,6 +39,7 @@ class DownloadController extends AbstractController
         private readonly DownloadLinks $links,
         private readonly ArtifactBuilder $builder,
         #[Autowire('%forge.accel_prefix%')] private readonly ?string $accelPrefix = null,
+        #[Autowire('%forge.download_ttl%')] private readonly int $downloadTtl = 600,
     ) {
     }
 
@@ -92,7 +93,7 @@ class DownloadController extends AbstractController
             }
         }
 
-        return $this->redirect($this->links->sign($artifact, array_filter(['license' => $license?->getId()])));
+        return $this->redirect($this->links->sign('forge_download_file', ['id' => $artifact->getId(), 'filename' => $artifact->getFilename()] + array_filter(['license' => $license?->getId()]), $this->downloadTtl));
     }
 
     #[Route('/telechargements/fichier/{id}/{filename}', name: 'forge_download_file', requirements: ['id' => '\d+', 'filename' => '[^/]+'])]

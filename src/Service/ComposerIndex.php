@@ -2,6 +2,7 @@
 
 namespace Base\Forge\Service;
 
+use Base\Service\DownloadLinks;
 use Base\Forge\Entity\License;
 use Base\Forge\Entity\Release;
 use Base\Forge\Entity\Software;
@@ -115,7 +116,7 @@ class ComposerIndex
         $artifact = $release->getArtifact('zip');
         // Composer caches dist files by URL and reference: a long-lived
         // signature keeps a cached install valid while the licence is.
-        $url = $this->links->sign($artifact, array_filter(['license' => $license?->getId(), 'channel' => 'composer']), 60 * 60 * 24 * 30);
+        $url = $this->links->sign('forge_download_file', ['id' => $artifact->getId(), 'filename' => $artifact->getFilename()] + array_filter(['license' => $license?->getId(), 'channel' => 'composer']), 60 * 60 * 24 * 30);
 
         return array_merge(
             \is_array($manifest) ? $manifest : [],

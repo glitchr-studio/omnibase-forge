@@ -119,3 +119,12 @@ let runs = genuine && payload.software == "switch-for-coder" && payload.machine 
 vault (`bin/console secrets:set FORGE_LICENSE_SIGNING_KEY`), the public key
 in the software. A new pair makes every token issued so far unverifiable:
 ship the new public key first.
+
+## Signed download links
+
+An artifact is downloaded through a link signed by glitchr/omnibase's
+`Base\Service\DownloadLinks` (route `forge_download_file`, valid
+`forge.download_ttl` seconds; the Composer index signs its links for thirty
+days). Who may download was checked when the link was handed out (the licence);
+the download action only checks the signature. The forge no longer has a
+DownloadLinks of its own.
