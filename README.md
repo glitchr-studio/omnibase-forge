@@ -18,6 +18,8 @@ A software forge for [base-bundle](https://gitlab.glitchr.dev/public-repository/
   3. The client accepts it and pays it like any order.
   4. Its hours are credited.
 
+  What every quote is (its client, status, discount, validity, numbering) is omnibase/marketplace's `AbstractQuote`; the forge keeps the hours and the `HourPack` - see [docs/quotes.md](docs/quotes.md).
+
 ## Requirements
 
 - PHP 8.2+, `ext-zip`

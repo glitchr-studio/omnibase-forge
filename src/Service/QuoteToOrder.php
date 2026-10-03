@@ -6,8 +6,11 @@ use Base\Entity\User;
 use Base\Forge\Entity\Product\HourPack;
 use Base\Forge\Entity\Quote;
 use Base\Marketplace\Entity\Order;
+use Base\Marketplace\Entity\Quote\AbstractQuote;
 use Base\Marketplace\Entity\Store;
 use Base\Marketplace\Service\Cart;
+use Base\Marketplace\Service\QuoteStatusGuard;
+use Base\Marketplace\Service\QuoteToOrder as MarketplaceQuoteToOrder;
 use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
@@ -17,25 +20,33 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
  * store - its hours, its discounted total, one in stock - dropped in their
  * cart. From there it is an order like any other; OrderPaidSubscriber
  * credits the hours and marks the quote paid once it is.
+ *
+ * omnibase/marketplace's QuoteToOrder, the studio's way: one HourPack
+ * rather than an order of the quote's lines.
  */
-class QuoteToOrder
+class QuoteToOrder extends MarketplaceQuoteToOrder
 {
     public function __construct(
-        private readonly EntityManagerInterface $entityManager,
+        EntityManagerInterface $entityManager,
         private readonly Cart $cart,
-        #[Autowire('%forge.support_store%')] private readonly string $storeSlug = 'support',
+        #[Autowire('%forge.support_store%')] string $storeSlug = 'support',
     ) {
+        parent::__construct($entityManager, null, null, $storeSlug);
     }
 
-    public function accept(Quote $quote, User $client): Order
+    public function accept(AbstractQuote $quote, User $client): Order
     {
+        if (!$quote instanceof Quote) {
+            return parent::accept($quote, $client);
+        }
+
         // Sent and still valid - or accepted already and not paid yet: back to
         // the cart it goes.
         if (!$quote->isAcceptable() && !QuoteStatusGuard::isAwaitingPayment($quote)) {
             throw new \DomainException('quote.error.not_acceptable');
         }
 
-        $store = $this->entityManager->getRepository(Store::class)->findOneBy(['slug' => $this->storeSlug])
+        $store = $this->entityManager->getRepository(Store::class)->findOneBy(['slug' => (string) $this->storeSlug])
             ?? throw new \LogicException(sprintf('The support store "%s" does not exist: create it in the back office.', $this->storeSlug));
 
         // The quote's row locked and read again: a double click (or two tabs)

@@ -2,25 +2,9 @@
 
 namespace Base\Forge\Enum;
 
-/**
- * requested  a visitor asked for one (the quote form); nothing priced yet
- * draft      the studio is writing the lines
- * sent       the client can read and accept it
- * accepted   the client said yes: an order waits for payment
- * paid       the order was paid; its hours are credited
- * declined   the client said no, or it lapsed
+/*
+ * A quote's statuses are omnibase/marketplace's now (Base\Marketplace\Enum\
+ * QuoteStatus: requested, draft, sent, accepted, paid, declined), the same
+ * for every trade. This name is kept for the code that uses it.
  */
-enum QuoteStatus: string
-{
-    case REQUESTED = 'requested';
-    case DRAFT = 'draft';
-    case SENT = 'sent';
-    case ACCEPTED = 'accepted';
-    case PAID = 'paid';
-    case DECLINED = 'declined';
-
-    public function isOpenToClient(): bool
-    {
-        return self::SENT === $this;
-    }
-}
+class_alias(\Base\Marketplace\Enum\QuoteStatus::class, __NAMESPACE__.'\QuoteStatus');

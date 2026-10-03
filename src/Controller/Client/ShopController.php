@@ -6,8 +6,8 @@ use Base\Entity\User;
 use Base\Forge\Entity\Product\HourPack;
 use Base\Forge\Entity\Quote;
 use Base\Forge\Enum\QuoteStatus;
-use Base\Forge\Form\QuoteRequestType;
-use Base\Forge\Model\QuoteRequest;
+use Base\Marketplace\Form\QuoteRequestType;
+use Base\Marketplace\Model\QuoteRequest;
 use Base\Marketplace\Service\CompanyRegistry;
 use Base\Forge\Repository\QuoteRepository;
 use Base\Forge\Service\HourLedger;
@@ -75,7 +75,8 @@ class ShopController extends AbstractController
             $data->contactName = (string) $user;
         }
 
-        $form = $this->createForm(QuoteRequestType::class, $data);
+        // The marketplace's form, without the trade terms (a studio sells hours, not cases).
+        $form = $this->createForm(QuoteRequestType::class, $data, ['trade' => false]);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
