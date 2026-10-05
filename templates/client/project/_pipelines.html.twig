@@ -1,0 +1,27 @@
+{#
+ # A project's latest pipelines, each as its graph (@Forge/_pipeline.html.twig), newest first:
+ #
+ #     {% include '@Forge/client/project/_pipelines.html.twig' with {project: project} %}
+ #
+ #  - limit:  how many (5)
+ #  - assets: false when the page already loads @glitchr/graphjs
+ # Nothing is printed for a project that has none.
+ #}
+{% set pipelines = forge_pipelines(project, limit ?? 5) %}
+{% if pipelines|length %}
+<section class="forge-pipelines" aria-labelledby="forge-pipelines-{{ project.id }}">
+    <h2 id="forge-pipelines-{{ project.id }}">{{ '@forge.pipeline.title'|trans }}</h2>
+    {% for pipeline in pipelines %}
+    <article class="forge-pipeline is-{{ pipeline.status.value }}">
+        <header>
+            <strong class="forge-pipeline-status">{{ ('@forge.pipeline.status.' ~ pipeline.status.value)|trans }}</strong>
+            {% if pipeline.ref %}<span>{{ pipeline.ref }}</span>{% endif %}
+            {% if pipeline.shortSha %}<code>{{ pipeline.shortSha }}</code>{% endif %}
+            <time datetime="{{ pipeline.createdAt|date('c') }}">{{ pipeline.createdAt|format_datetime('medium', 'short') }}</time>
+            {% if pipeline.url %}<a class="forge-link" href="{{ pipeline.url }}" target="_blank" rel="noopener">{{ '@forge.pipeline.open'|trans }}</a>{% endif %}
+        </header>
+        {% include '@Forge/_pipeline.html.twig' with {pipeline: pipeline, assets: (assets ?? true) and loop.first} only %}
+    </article>
+    {% endfor %}
+</section>
+{% endif %}

@@ -1,0 +1,33 @@
+{% extends '@Admin/layout.html.twig' %}
+
+{% block page_title %}{{ '@forge.pipeline.title'|trans }}{% endblock %}
+
+{% block content_header %}
+<div class="admin-header">
+    <span class="admin-header-icon"><i class="fa-solid fa-diagram-next"></i></span>
+    <div class="admin-header-titles">
+        <h1>{{ '@forge.pipeline.title'|trans }}</h1>
+        <div class="admin-header-subtitle">{{ '@forge.pipeline.lead'|trans }}</div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+{% include '@Forge/admin/pipeline/_style.html.twig' %}
+<div class="forge-pipelines">
+{% for pipeline in pipelines %}
+    <article class="card forge-pipeline is-{{ pipeline.status.value }}">
+        <header>
+            <strong class="forge-pipeline-status">{{ ('@forge.pipeline.status.' ~ pipeline.status.value)|trans }}</strong>
+            <a href="{{ path('forge_admin_pipeline', {id: pipeline.id}) }}">{{ pipeline.project ? pipeline.project.name : '—' }}</a>
+            {% if pipeline.ref %}<span>{{ pipeline.ref }}</span>{% endif %}
+            {% if pipeline.shortSha %}<code>{{ pipeline.shortSha }}</code>{% endif %}
+            <time datetime="{{ pipeline.createdAt|date('c') }}">{{ pipeline.createdAt|format_datetime('medium', 'short') }}</time>
+        </header>
+        {% include '@Forge/_pipeline.html.twig' with {pipeline: pipeline} only %}
+    </article>
+{% else %}
+    <p class="card forge-pipeline-empty">{{ '@forge.pipeline.none'|trans }}</p>
+{% endfor %}
+</div>
+{% endblock %}

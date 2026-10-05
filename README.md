@@ -8,6 +8,7 @@ A software forge for [base-bundle](https://gitlab.glitchr.dev/public-repository/
 - **Client projects.**
   - A board the client and the studio both move cards on: its page, its script and its stylesheet are the bundle's - see [docs/board.md](docs/board.md).
   - The time the studio logs, and the history of the project's repository.
+  - Its pipelines: what ran on each commit, stage by stage, drawn as a graph in the back office and on the project's page - see [docs/pipelines.md](docs/pipelines.md).
 - **Support hours.**
   - Prepaid packs (`HourPack`) credit a ledger.
   - Logged time debits it.

@@ -1,0 +1,17 @@
+{# The pipelines' pages in the back office: a card per run, its graph inside. #}
+<style>
+    .forge-pipelines { display: grid; gap: 1rem; }
+    .forge-pipeline { padding: 1rem 1.25rem; }
+    .forge-pipeline > header { display: flex; flex-wrap: wrap; align-items: baseline; gap: .35rem 1rem; margin-bottom: .75rem; }
+    .forge-pipeline > header time { margin-left: auto; opacity: .7; font-size: .85em; }
+    .forge-pipeline-graph { --graph-height: 14rem; }
+    .forge-pipeline.is-large .forge-pipeline-graph { --graph-height: 24rem; }
+    .forge-pipeline-graph [data-graph-node] small { display: block; opacity: .7; font-weight: 400; }
+    .forge-pipeline-status { font-weight: 600; }
+    .forge-pipeline-jobs { width: 100%; border-collapse: collapse; }
+    .forge-pipeline-jobs th, .forge-pipeline-jobs td { padding: .5rem .9rem; text-align: left; }
+    .forge-pipeline-jobs th { opacity: .7; font-size: .8em; text-transform: uppercase; letter-spacing: .04em; }
+    .forge-pipeline-jobs tbody tr + tr td { border-top: 1px solid rgba(127, 127, 127, .2); }
+    .forge-pipeline-others { margin: 1rem 0 0; font-size: 1rem; }
+    .forge-pipeline-empty { padding: 1.5rem; opacity: .7; }
+</style>

@@ -1,0 +1,26 @@
+{#
+ # A pipeline as a graph: a node per job, its stage under its name, in the colour of its status,
+ # an edge from each job it waits for. Drawn by @glitchr/graphjs (its `pipeline` preset), which
+ # starts every [data-graph] of a page by itself; without its script the jobs still read, in order.
+ #
+ #     {% include '@Forge/_pipeline.html.twig' with {pipeline: pipeline} %}
+ #
+ # The back office's layout loads the library; elsewhere, pass `assets: true` once on the page.
+ #}
+{% if assets ?? false %}
+<link rel="stylesheet" href="{{ asset('bundles/admin/css/graph.css') }}">
+<script type="module" src="{{ asset('bundles/admin/js/graph.js') }}"></script>
+{% endif %}
+{% set graph = forge_pipeline_graph(pipeline) %}
+{% set sources = forge_pipeline_sources(pipeline) %}
+<div class="forge-pipeline-graph" data-graph data-graph-preset="pipeline" id="forge-pipeline-{{ pipeline.id }}"
+     aria-label="{{ '@forge.pipeline.graph'|trans({ref: pipeline.ref ?? pipeline.shortSha ?? pipeline.id}) }}">
+{% for node in graph.nodes %}
+    {% set attributes %}data-graph-node="{{ node.id }}" data-graph-rank="{{ node.rank }}" data-graph-state="{{ node.state }}"{% if sources[node.id] is defined %} data-graph-from="{{ sources[node.id]|join(' ') }}"{% endif %} title="{{ node.title }}"{% endset %}
+    {% if node.href %}
+    <a href="{{ node.href }}" target="_blank" rel="noopener" {{ attributes|raw }}><strong>{{ node.label }}</strong> <small>{{ node.sub }}</small></a>
+    {% else %}
+    <span {{ attributes|raw }}><strong>{{ node.label }}</strong> <small>{{ node.sub }}</small></span>
+    {% endif %}
+{% endfor %}
+</div>

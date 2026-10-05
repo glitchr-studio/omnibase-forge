@@ -8,4 +8,5 @@
 {% block forge_body %}
     <p class="forge-meta">{{ '@forge.board.progress'|trans({percent: project.progress, done: project.board.done|length, total: project.cards|length}) }}</p>
     {% include '@Forge/client/project/_board.html.twig' with {project: project} %}
+    {% include '@Forge/client/project/_pipelines.html.twig' with {project: project} %}
 {% endblock %}

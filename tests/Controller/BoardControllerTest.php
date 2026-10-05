@@ -9,35 +9,15 @@ use Base\Forge\Entity\Project;
 use Base\Forge\Enum\CardColumn;
 use Base\Forge\Enum\ProjectStatus;
 use Base\Forge\Service\Board;
-use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
-use Symfony\Bundle\FrameworkBundle\Test\TestBrowserToken;
-use Symfony\Component\HttpFoundation\Request;
+use Tests\Base\Forge\ForgeWebTestCase;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
  * The board as a visitor meets it, in a host application (skipped in a bare checkout): its page,
- * a card moved by a request, and who may do either. The requests go straight to the kernel - a
- * host need not have symfony/browser-kit - with the session a browser would carry.
+ * a card moved by a request, and who may do either.
  */
-class BoardControllerTest extends KernelTestCase
+class BoardControllerTest extends ForgeWebTestCase
 {
-    private EntityManagerInterface $em;
-    /** @var array<string, string> the cookies of the visitor: their session */
-    private array $cookies = [];
-
-    protected function setUp(): void
-    {
-        $_SERVER['KERNEL_CLASS'] ??= $_ENV['KERNEL_CLASS'] ?? 'App\\Kernel';
-        if (!class_exists($_SERVER['KERNEL_CLASS'])) {
-            self::markTestSkipped('Needs a host application kernel.');
-        }
-
-        self::bootKernel();
-        $this->em = static::getContainer()->get(EntityManagerInterface::class);
-        $this->cookies = [];
-    }
-
     public function testAClientSeesTheirBoardAndMovesACard(): void
     {
         [$client, $project, $cards] = $this->project();
@@ -130,36 +110,6 @@ class BoardControllerTest extends KernelTestCase
         return $this->request('PATCH', '/projets/cartes/'.$card->getId(), ['HTTP_X_CSRF_TOKEN' => $token, 'CONTENT_TYPE' => 'application/json', 'HTTP_ACCEPT' => 'application/json'], json_encode(['column' => $column, 'position' => $position]));
     }
 
-    /** One request to the kernel, with the visitor's cookies; the ones it sets are kept. */
-    private function request(string $method, string $uri, array $server = [], ?string $body = null): Response
-    {
-        $request = Request::create('https://localhost'.$uri, $method, [], $this->cookies, [], $server + ['REMOTE_ADDR' => '127.0.0.1', 'HTTP_USER_AGENT' => 'PHPUnit'], $body);
-        $response = static::$kernel->handle($request);
-        foreach ($response->headers->getCookies() as $cookie) {
-            $this->cookies[$cookie->getName()] = (string) $cookie->getValue();
-        }
-
-        return $response;
-    }
-
-    /** As KernelBrowser::loginUser() does: the token in a session, the session's cookie on the visitor. */
-    private function signIn(User $user): void
-    {
-        $context = $this->firewall();
-        $session = static::getContainer()->get('session.factory')->createSession();
-        $session->set('_security_'.$context, serialize(new TestBrowserToken($user->getRoles(), $user, $context)));
-        $session->save();
-        $this->cookies = [$session->getName() => $session->getId()];
-    }
-
-    private function xpath(Response $response): \DOMXPath
-    {
-        $document = new \DOMDocument();
-        @$document->loadHTML('<?xml encoding="UTF-8">'.$response->getContent());
-
-        return new \DOMXPath($document);
-    }
-
     /** @return list<string> the cards' titles in a column of the page, top to bottom */
     private function titles(\DOMXPath $page, string $column): array
     {
@@ -185,32 +135,5 @@ class BoardControllerTest extends KernelTestCase
         $this->em->flush();
 
         return [$client, $project, $cards];
-    }
-
-    private function user(string $name): User
-    {
-        $class = class_exists('App\\Entity\\User') ? 'App\\Entity\\User' : User::class;
-        $name .= '-'.bin2hex(random_bytes(3));
-        $user = new $class();
-        $user->setUsername($name);
-        $user->setEmail($name.'@example.org');
-        $user->setPlainPassword($name);
-        $user->setRoles(['ROLE_USER']);
-        if (method_exists($user, 'verify')) {
-            $user->verify();
-        }
-        $this->em->persist($user);
-
-        return $user;
-    }
-
-    /** The context of the firewall the pages are behind ("main", or the one the host shares between its firewalls). */
-    private function firewall(): string
-    {
-        try {
-            return static::getContainer()->get('security.firewall.map.config.main')->getContext() ?: 'main';
-        } catch (\Throwable) {
-            return 'main';
-        }
     }
 }

@@ -1,0 +1,62 @@
+{% extends '@Admin/layout.html.twig' %}
+
+{% block page_title %}{{ '@forge.pipeline.one'|trans({name: pipeline}) }}{% endblock %}
+
+{% block content_header %}
+<div class="admin-header">
+    <span class="admin-header-icon"><i class="fa-solid fa-diagram-next"></i></span>
+    <div class="admin-header-titles">
+        <h1>{{ '@forge.pipeline.one'|trans({name: pipeline}) }}</h1>
+        <div class="admin-header-subtitle">
+            {{ ('@forge.pipeline.status.' ~ pipeline.status.value)|trans }}
+            {% if pipeline.project %} · {{ pipeline.project.name }}{% endif %}
+            {% if pipeline.shortSha %} · <code>{{ pipeline.shortSha }}</code>{% endif %}
+            · {{ pipeline.createdAt|format_datetime('medium', 'short') }}
+            {% if pipeline.duration is not null %} · {{ '@forge.pipeline.duration'|trans({seconds: pipeline.duration}) }}{% endif %}
+        </div>
+    </div>
+    <div class="admin-header-actions">
+        <a class="btn btn-secondary" href="{{ path('forge_admin_pipelines') }}">{{ '@forge.pipeline.all'|trans }}</a>
+        {% if pipeline.url %}<a class="btn btn-secondary" href="{{ pipeline.url }}" target="_blank" rel="noopener">{{ '@forge.pipeline.open'|trans }}</a>{% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+{% include '@Forge/admin/pipeline/_style.html.twig' %}
+<div class="forge-pipelines">
+    <article class="card forge-pipeline is-{{ pipeline.status.value }} is-large">
+        {% include '@Forge/_pipeline.html.twig' with {pipeline: pipeline} only %}
+    </article>
+
+    <div class="card">
+        <table class="forge-pipeline-jobs">
+            <thead><tr><th>{{ '@forge.pipeline.stage'|trans }}</th><th>{{ '@forge.pipeline.job'|trans }}</th><th>{{ '@forge.pipeline.state'|trans }}</th><th>{{ '@forge.pipeline.took'|trans }}</th></tr></thead>
+            <tbody>
+            {% for stage in pipeline.stages %}
+                {% for job in stage.jobs %}
+                <tr>
+                    <td>{{ loop.first ? stage.name }}</td>
+                    <td>{% if job.url %}<a href="{{ job.url }}" target="_blank" rel="noopener">{{ job.name }}</a>{% else %}{{ job.name }}{% endif %}</td>
+                    <td><span class="forge-pipeline-status is-{{ job.effectiveStatus.value }}">{{ ('@forge.pipeline.status.' ~ job.effectiveStatus.value)|trans }}</span>{% if job.allowFailure %} <small>{{ '@forge.pipeline.allowed_to_fail'|trans }}</small>{% endif %}</td>
+                    <td>{{ job.duration is not null ? '@forge.pipeline.duration'|trans({seconds: job.duration}) : '—' }}</td>
+                </tr>
+                {% endfor %}
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% for other in others %}
+    {% if loop.first %}<h2 class="forge-pipeline-others">{{ '@forge.pipeline.others'|trans }}</h2>{% endif %}
+    <article class="card forge-pipeline is-{{ other.status.value }}">
+        <header>
+            <strong class="forge-pipeline-status">{{ ('@forge.pipeline.status.' ~ other.status.value)|trans }}</strong>
+            <a href="{{ path('forge_admin_pipeline', {id: other.id}) }}">{{ other }}</a>
+            <time datetime="{{ other.createdAt|date('c') }}">{{ other.createdAt|format_datetime('medium', 'short') }}</time>
+        </header>
+        {% include '@Forge/_pipeline.html.twig' with {pipeline: other} only %}
+    </article>
+    {% endfor %}
+</div>
+{% endblock %}
