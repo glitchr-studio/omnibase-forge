@@ -162,3 +162,11 @@ review:
 price:
   with_vat: "incl. VAT"
   without_vat: "excl. VAT"
+board:
+  columns:
+    backlog: "To do"
+    progress: "In progress"
+    review: "In review"
+    done: "Delivered"
+  progress: "{percent}% — {done, plural, =0 {no card delivered} one {# card delivered} other {# cards delivered}} out of {total}"
+  move_failed: "The move could not be saved."

@@ -6,7 +6,7 @@ A software forge for [base-bundle](https://gitlab.glitchr.dev/public-repository/
 - **Downloads.** Free software downloads for anyone. Licensed software downloads against a licence bought as a market product (`LicenseOffer`). Files are served through signed, short-lived URLs and nginx `X-Accel-Redirect`.
 - **A private Composer repository.** `/composer/packages.json` lists the free packages for anyone, and the licensed ones for the holder of a valid licence. Authentication is HTTP Basic with the e-mail and the licence key.
 - **Client projects.**
-  - A board the client and the studio both move cards on.
+  - A board the client and the studio both move cards on: its page, its script and its stylesheet are the bundle's - see [docs/board.md](docs/board.md).
   - The time the studio logs, and the history of the project's repository.
 - **Support hours.**
   - Prepaid packs (`HourPack`) credit a ledger.

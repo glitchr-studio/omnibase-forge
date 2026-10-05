@@ -1,0 +1,36 @@
+{#
+ # A project's board: its four columns and their cards, each dragged from one to another
+ # (public/js/board.js) and saved at once (BoardController::move). Include it in a page of
+ # one's own:
+ #
+ #     {% include '@Forge/client/project/_board.html.twig' with {project: project} %}
+ #
+ #  - project:  Base\Forge\Entity\Project
+ #  - editable: whether the cards move; by default what ProjectVoter says of the visitor
+ #  - assets:   false when the page already loads bundles/forge/css/board.css and js/board.js
+ #
+ # Its look is a handful of custom properties (--forge-board-*), set on .forge-board or above.
+ #}
+{% set editable = editable ?? is_granted('FORGE_PROJECT_EDIT_BOARD', project) %}
+{% if assets ?? true %}
+<link rel="stylesheet" href="{{ asset('bundles/forge/css/board.css') }}">
+<script src="{{ asset('bundles/forge/js/board.js') }}" defer></script>
+{% endif %}
+<div class="forge-board-scroll">
+<div class="forge-board{{ editable ? ' is-editable' }}" data-forge-board
+     {% if editable %}data-token="{{ csrf_token('forge_board') }}" data-error-message="{{ '@forge.board.move_failed'|trans }}"{% endif %}>
+{% for column, cards in project.board %}
+    <section class="forge-board-column" data-forge-board-column="{{ column }}" aria-labelledby="forge-board-{{ project.id }}-{{ column }}">
+        <h3 id="forge-board-{{ project.id }}-{{ column }}">{{ ('@forge.board.columns.' ~ column)|trans }} <span data-forge-board-count>{{ cards|length }}</span></h3>
+        {% for card in cards %}
+        <article class="forge-board-card is-{{ column }}" data-forge-board-card="{{ card.id }}"
+                 {% if editable %}data-url="{{ path('forge_board_card', {id: card.id}) }}"{% endif %}>
+            <span class="forge-board-card-title">{{ card.title }}</span>
+            {% if card.label %}<small class="forge-board-card-label">{{ card.label }}</small>{% endif %}
+            {% if card.description %}<p class="forge-board-card-text">{{ card.description }}</p>{% endif %}
+        </article>
+        {% endfor %}
+    </section>
+{% endfor %}
+</div>
+</div>

@@ -162,3 +162,11 @@ review:
 price:
   with_vat: "TTC"
   without_vat: "HT"
+board:
+  columns:
+    backlog: "À faire"
+    progress: "En cours"
+    review: "En revue"
+    done: "Livré"
+  progress: "{percent} % — {done, plural, =0 {aucune carte livrée} one {# carte livrée} other {# cartes livrées}} sur {total}"
+  move_failed: "Le déplacement n'a pas pu être enregistré."

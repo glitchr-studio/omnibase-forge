@@ -1,0 +1,11 @@
+{# A project's board on a page of its own, in the host's layout. #}
+{% extends '@Forge/client/layout.html.twig' %}
+
+{% block forge_title %}{{ project.name }}{% endblock %}
+{% block forge_lead %}{{ project.summary }}{% endblock %}
+{% block forge_class %}forge-project{% endblock %}
+
+{% block forge_body %}
+    <p class="forge-meta">{{ '@forge.board.progress'|trans({percent: project.progress, done: project.board.done|length, total: project.cards|length}) }}</p>
+    {% include '@Forge/client/project/_board.html.twig' with {project: project} %}
+{% endblock %}
