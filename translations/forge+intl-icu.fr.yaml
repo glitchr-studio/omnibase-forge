@@ -20,7 +20,7 @@ software:
   releases: "Versions"
   not_covered: "hors de votre licence"
   no_release: "Pas encore de version publiée."
-  free_text: "Logiciel libre (LGPL-3.0 ou ultérieure) : téléchargez, utilisez, modifiez."
+  free_text: "Logiciel libre (MIT) : téléchargez, utilisez, modifiez."
   licensed_yours: "Votre licence est active"
   manage: "Gérer mes licences et mes clés"
   buy: "Acheter une licence"

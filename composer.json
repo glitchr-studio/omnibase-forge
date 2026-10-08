@@ -14,7 +14,7 @@
         "git"
     ],
     "homepage": "https://github.com/glitchr-studio/omnibase-forge",
-    "license": "LGPL-3.0-or-later",
+    "license": "MIT",
     "authors": [
         {
             "name": "Marco Meyer",
